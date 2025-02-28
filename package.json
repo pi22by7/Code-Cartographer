@@ -1,11 +1,21 @@
 {
   "name": "code-cartographer",
+  "publisher": "pi22by7",
   "displayName": "Code Cartographer",
   "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
   "version": "0.1.0",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.97.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pi22by7/Code-Cartographer"
+  },
+  "author": {
+    "name": "pi22by7"
+  },
+  "icon": "images/logo.png",
+  "license": "MIT",
   "categories": [
     "Other"
   ],
