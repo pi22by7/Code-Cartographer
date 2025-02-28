@@ -12,3 +12,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+images/logo.svg
+logo.js

@@ -24,25 +24,48 @@ export class CodeCartographer {
     private fileCount: number = 0;
     private gitignoreMatcher: (filePath: string) => boolean;
     private progressCallback?: (message: string, percent: number) => void;
+    private customIgnorePatterns: string[] = [];
 
     constructor(rootDir: string) {
         this.rootDir = rootDir;
-        this.gitignoreMatcher = parseGitignore(path.join(rootDir, '.gitignore'));
+
+        // Get custom ignore patterns from settings
+        const config = require('vscode').workspace.getConfiguration('codeCartographer');
+        this.customIgnorePatterns = config.get('ignorePatterns', [
+            'node_modules', '.git', 'out', 'dist'
+        ]);
+
+        // Try to load .gitignore, but don't fail if it doesn't exist
+        const gitignorePath = path.join(rootDir, '.gitignore');
+        this.gitignoreMatcher = parseGitignore(gitignorePath);
+
+        console.log(`CodeCartographer initialized for: ${rootDir}`);
+        console.log(`Custom ignore patterns: ${this.customIgnorePatterns.join(', ')}`);
     }
 
     private shouldIgnore(filePath: string): boolean {
+        const relativePath = path.relative(this.rootDir, filePath);
+
+        // Log when ignoring files (for debugging)
+        const shouldLog = false; // Set to true for verbose logging
+
+        // Check gitignore rules
         if (this.gitignoreMatcher && this.gitignoreMatcher(filePath)) {
+            if (shouldLog) { console.log(`Ignoring (gitignore): ${relativePath}`); }
             return true;
         }
 
+        // Check ignored extensions
         const ignoredExtensions = ['.pyc', '.pyo', '.pyd', '.egg-info', '.o', '.obj', '.exe', '.dll'];
         if (ignoredExtensions.includes(path.extname(filePath))) {
+            if (shouldLog) { console.log(`Ignoring (extension): ${relativePath}`); }
             return true;
         }
 
-        const ignoredDirs = ['__pycache__', '.git', '.vscode', '.idea', 'node_modules', 'dist', 'out', 'build'];
-        const parts = filePath.split(path.sep);
-        if (parts.some(part => ignoredDirs.includes(part))) {
+        // Check custom ignore patterns
+        const parts = relativePath.split(path.sep);
+        if (parts.some(part => this.customIgnorePatterns.includes(part))) {
+            if (shouldLog) { console.log(`Ignoring (custom pattern): ${relativePath}`); }
             return true;
         }
 
@@ -151,71 +174,107 @@ export class CodeCartographer {
         const structure = {
             name: path.basename(this.rootDir),
             type: 'directory',
+            path: this.rootDir,
             children: []
         };
 
-        // If no items specified, return empty structure
+        // If no items specified, scan the entire directory
+        let filesToProcess: string[] = [];
         if (includeItems.length === 0) {
-            const allFiles = await this.getAllFiles(this.rootDir);
-            includeItems = allFiles.filter(file => !this.shouldIgnore(file));
+            // Get all files in the directory recursively
+            filesToProcess = await this.getAllFiles(this.rootDir);
+            console.log(`Found ${filesToProcess.length} total files to process`);
+        } else {
+            filesToProcess = includeItems;
+            console.log(`Using ${filesToProcess.length} provided files to process`);
         }
 
-        const addPathToStructure = (
-            structure: any,
-            fullPath: string,
-            relativePath: string
-        ) => {
-            const parts = relativePath.split(path.sep);
-            let current = structure;
+        // Filter out ignored files
+        const filteredFiles = filesToProcess.filter(file => !this.shouldIgnore(file));
+        console.log(`After filtering, ${filteredFiles.length} files remain`);
 
-            for (let i = 0; i < parts.length; i++) {
-                const part = parts[i];
-                const isLast = i === parts.length - 1;
-                const isFile = isLast && fs.statSync(fullPath).isFile();
-
-                // Find existing node or create new one
-                let node = current.children.find((child: any) => child.name === part);
-
-                if (!node) {
-                    node = {
-                        name: part,
-                        type: isFile ? 'file' : 'directory'
-                    };
-
-                    if (!isFile) {
-                        node.children = [];
-                    } else {
-                        node.size = fs.statSync(fullPath).size;
-                    }
-
-                    current.children.push(node);
-                }
-
-                if (!isFile) {
-                    current = node;
-                }
-            }
-        };
-
-        // Process all include items
-        for (const item of includeItems) {
-            const relativePath = path.relative(this.rootDir, item);
-            addPathToStructure(structure, item, relativePath);
+        // Add all files to the structure
+        for (const fullPath of filteredFiles) {
+            const relativePath = path.relative(this.rootDir, fullPath);
+            this.addPathToStructure(structure, fullPath, relativePath);
         }
 
         return structure;
     }
 
+    private addPathToStructure(
+        structure: any,
+        fullPath: string,
+        relativePath: string
+    ): void {
+        const parts = relativePath.split(path.sep);
+        let current = structure;
+
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (!part) { continue; } // Skip empty parts
+
+            const isLast = i === parts.length - 1;
+            const isFile = isLast && fs.statSync(fullPath).isFile();
+            const currentRelativePath = parts.slice(0, i + 1).join(path.sep);
+            const currentFullPath = path.join(this.rootDir, currentRelativePath);
+
+            // Find existing node or create new one
+            let node = current.children.find((child: any) => child.name === part);
+
+            if (!node) {
+                node = {
+                    name: part,
+                    type: isFile ? 'file' : 'directory',
+                    path: currentFullPath
+                };
+
+                if (!isFile) {
+                    node.children = [];
+                } else {
+                    try {
+                        const stats = fs.statSync(fullPath);
+                        node.size = stats.size;
+                    } catch (error) {
+                        console.error(`Error getting stats for ${fullPath}:`, error);
+                        node.size = 0;
+                    }
+                }
+
+                current.children.push(node);
+            }
+
+            if (!isFile) {
+                current = node;
+            }
+        }
+    }
+
     private async getAllFiles(dir: string): Promise<string[]> {
-        const entries = await readdirAsync(dir, { withFileTypes: true });
+        try {
+            const entries = await readdirAsync(dir, { withFileTypes: true });
 
-        const files = await Promise.all(entries.map(async entry => {
-            const fullPath = path.join(dir, entry.name);
-            return entry.isDirectory() ?
-                this.getAllFiles(fullPath) : [fullPath];
-        }));
+            const promises = entries.map(async entry => {
+                const fullPath = path.join(dir, entry.name);
 
-        return files.flat();
+                // Skip ignored directories early for performance
+                if (entry.isDirectory() && this.customIgnorePatterns.includes(entry.name)) {
+                    return [];
+                }
+
+                if (entry.isDirectory()) {
+                    return this.getAllFiles(fullPath);
+                } else {
+                    return [fullPath];
+                }
+            });
+
+            const results = await Promise.all(promises);
+            return results.flat();
+        } catch (error) {
+            console.error(`Error reading directory ${dir}:`, error);
+            return [];
+        }
     }
 
     async document(options: DocumentOptions): Promise<void> {
@@ -238,12 +297,11 @@ export class CodeCartographer {
             this.reportProgress('Analyzing file structure...', 10);
 
             const items = includeItems.length > 0 ?
-                includeItems :
-                [this.rootDir];
+                includeItems.map(item => path.resolve(this.rootDir, item)) :
+                [];
 
-            fileStructure = await this.getFileStructure(
-                items.map(item => path.resolve(this.rootDir, item))
-            );
+            fileStructure = await this.getFileStructure(items);
+            console.log(`Structure generated with ${fileStructure.children.length} top-level items`);
         }
 
         // Generate file documentation if needed
@@ -254,6 +312,8 @@ export class CodeCartographer {
                 includeItems.map(item => path.resolve(this.rootDir, item)) :
                 await this.getAllFiles(this.rootDir);
 
+            console.log(`Generating documentation for ${filesToProcess.length} files`);
+
             let processed = 0;
             for (const filePath of filesToProcess) {
                 const result = await this.processFile(filePath);
@@ -262,11 +322,13 @@ export class CodeCartographer {
                 }
 
                 processed++;
-                if (processed % 10 === 0) {
+                if (processed % 10 === 0 || processed === filesToProcess.length) {
                     const percent = Math.floor(30 + (processed / filesToProcess.length) * 50);
                     this.reportProgress(`Processed ${processed}/${filesToProcess.length} files...`, percent);
                 }
             }
+
+            console.log(`Successfully documented ${fileContents.length} files`);
         }
 
         // Generate output
@@ -275,7 +337,7 @@ export class CodeCartographer {
         const outputData = {
             project_info: {
                 path: this.rootDir,
-                generated_on: new Date().toISOString(),
+                generated_on: new Date().toISOString().replace('T', ' ').substr(0, 19),
                 documentation_type: documentationType,
                 total_files: this.fileCount,
                 total_size: this.totalSize
@@ -285,18 +347,24 @@ export class CodeCartographer {
         };
 
         // Write output in specified format
-        switch (outputFormat) {
-            case 'json':
-                await writeFileAsync(outputPath, JSON.stringify(outputData, null, 2), 'utf8');
-                break;
-            case 'txt':
-                await this.writeTxtOutput(outputPath, outputData);
-                break;
-            case 'csv':
-                await this.writeCsvOutput(outputPath, outputData);
-                break;
-            default:
-                await writeFileAsync(outputPath, JSON.stringify(outputData, null, 2), 'utf8');
+        try {
+            switch (outputFormat) {
+                case 'json':
+                    await writeFileAsync(outputPath, JSON.stringify(outputData, null, 2), 'utf8');
+                    break;
+                case 'txt':
+                    await this.writeTxtOutput(outputPath, outputData);
+                    break;
+                case 'csv':
+                    await this.writeCsvOutput(outputPath, outputData);
+                    break;
+                default:
+                    await writeFileAsync(outputPath, JSON.stringify(outputData, null, 2), 'utf8');
+            }
+            console.log(`Documentation written to ${outputPath}`);
+        } catch (error) {
+            console.error(`Error writing documentation:`, error);
+            throw error;
         }
 
         this.reportProgress('Documentation completed!', 100);
@@ -336,12 +404,20 @@ export class CodeCartographer {
         let output = `${prefix}${structure.name}\n`;
 
         if (structure.children) {
-            for (let i = 0; i < structure.children.length; i++) {
-                const isLast = i === structure.children.length - 1;
+            // Sort directories first, then files alphabetically
+            const sortedChildren = [...structure.children].sort((a, b) => {
+                if (a.type !== b.type) {
+                    return a.type === 'directory' ? -1 : 1;
+                }
+                return a.name.localeCompare(b.name);
+            });
+
+            for (let i = 0; i < sortedChildren.length; i++) {
+                const isLast = i === sortedChildren.length - 1;
                 const childPrefix = prefix + (isLast ? '└── ' : '├── ');
                 const grandchildPrefix = prefix + (isLast ? '    ' : '│   ');
 
-                output += this.formatStructureAsTxt(structure.children[i], childPrefix);
+                output += this.formatStructureAsTxt(sortedChildren[i], childPrefix);
             }
         }
 

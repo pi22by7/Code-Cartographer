@@ -2,11 +2,15 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { CodeCartographer } from './codeCartographer';
 import { DocumentationTreeProvider } from './treeView';
+import { DocumentationViewer } from './documentationViewer';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Register tree view
 	const treeDataProvider = new DocumentationTreeProvider();
 	vscode.window.registerTreeDataProvider('codeCartographerExplorer', treeDataProvider);
+
+	// Create documentation viewer
+	const documentationViewer = new DocumentationViewer(context);
 
 	// Store the tree provider instance in context for access from other parts
 	context.subscriptions.push({ dispose: () => { } });
@@ -86,10 +90,11 @@ export function activate(context: vscode.ExtensionContext) {
 					// Show success message
 					vscode.window.showInformationMessage(
 						`Documentation generated at ${path.basename(outputUri.fsPath)}`,
-						'Open File'
+						'View Documentation'
 					).then(selection => {
-						if (selection === 'Open File') {
-							vscode.commands.executeCommand('vscode.open', outputUri);
+						if (selection === 'View Documentation') {
+							// Use the custom viewer instead of just opening the file
+							documentationViewer.showDocumentation(outputUri.fsPath);
 						}
 					});
 				} catch (err) {
@@ -139,12 +144,19 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			try {
-				// Open the documentation file in editor
-				const uri = vscode.Uri.file(docPath);
-				await vscode.commands.executeCommand('vscode.open', uri);
+				// Open in webview instead of raw editor
+				await documentationViewer.showDocumentation(docPath);
 			} catch (error) {
-				console.error('Error opening file:', error);
+				console.error('Error opening documentation viewer:', error);
 				vscode.window.showErrorMessage(`Failed to open documentation: ${error}`);
+
+				// Fallback to opening in editor if webview fails
+				try {
+					const uri = vscode.Uri.file(docPath);
+					await vscode.commands.executeCommand('vscode.open', uri);
+				} catch (fallbackError) {
+					console.error('Error in fallback file opening:', fallbackError);
+				}
 			}
 		}
 	);

@@ -3,7 +3,7 @@
   "publisher": "pi22by7",
   "displayName": "Code Cartographer",
   "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -19,6 +19,7 @@
   "categories": [
     "Other"
   ],
+  "pricing": "Free",
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
