@@ -1,7 +1,7 @@
 {
   "name": "code-cartographer",
   "displayName": "Code Cartographer",
-  "description": "Automatically generate comprehensive documentation of your codebase",
+  "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
   "version": "0.1.0",
   "engines": {
     "vscode": "^1.60.0"
