@@ -4,13 +4,13 @@ Code Cartographer is a powerful VS Code extension that automatically generates c
 
 ## Features
 
-- Generates structured documentation ideal for LLM context windows
-- Creates file hierarchies and code content analysis
-- Respects .gitignore patterns and skips binary files
-- Multiple output formats (JSON, TXT, CSV)
-- Intelligent handling of different file types
-- Documentation explorer view
-- Rich documentation viewer with search capabilities
+- **Project Documentation**: Generate detailed file structure and content documentation
+- **Flexible Configuration**: Use a dedicated configuration file to control what gets documented
+- **Intelligent Filtering**: Skip binary files, generated code, and large files automatically
+- **Multiple Output Formats**: Choose between JSON, TXT, and CSV outputs
+- **Interactive Views**: Preview generated documentation in a rich interactive view
+- **Quick Project Analysis**: Get a quick overview of your project's structure and file distribution
+- **Enhanced Debugging**: Comprehensive logging to help diagnose issues
 
 ## Why Use Code Cartographer with LLMs
 
@@ -19,42 +19,143 @@ Code Cartographer was designed with LLM workflows in mind:
 - **Optimized Context**: Generate documentation that fits within LLM context windows
 - **Better Comprehension**: Help LLMs understand your codebase structure and relationships
 - **Efficient Interaction**: Get more accurate code suggestions by providing complete project context
-- **Focused Documentation**: Include only the files and code that matter, excluding binaries and generated files
+- **Focused Documentation**: Include only the files and code that matter using flexible configuration
 
-## Usage
+## Getting Started
 
-1. Open a workspace in VS Code
-2. Right-click on a folder in the explorer and select "Generate Documentation"
-3. Choose your output format and location
-4. View the generated documentation in the built-in viewer
-5. Use the documentation file with your favorite LLM to provide project context
+### Installation
+
+Install from the VS Code Marketplace or:
+
+1. Press `Ctrl+P` (or `Cmd+P` on Mac)
+2. Type `ext install pi22by7.code-cartographer`
+
+### Quick Start
+
+1. Right-click on a project folder in the explorer
+2. Select "Generate Documentation"
+3. Choose your output location
+4. View the generated documentation
+
+### Using a Configuration File
+
+For more control over what gets documented, create a configuration file:
+
+1. Right-click on a project folder in the explorer
+2. Select "Create Config File" to generate a `cartographer.config.json` file
+3. Customize the patterns for included and excluded files
+4. Run "Generate Documentation" to use your custom configuration
 
 ## Configuration
 
-You can customize Code Cartographer in the VS Code settings:
+### Configuration File
 
-- `codeCartographer.outputFormat`: Choose between JSON, TXT, or CSV output
-- `codeCartographer.documentationType`: Generate structure only, documentation only, or both
-- `codeCartographer.ignorePatterns`: Specify additional patterns to ignore
+The recommended way to configure Code Cartographer is with a `cartographer.config.json` file in your project root. This gives you precise control over what gets documented:
 
-## Requirements
+```json
+{
+  "version": "1.0",
+  "include": [
+    "src/**/*",
+    "*.json",
+    "*.md"
+  ],
+  "exclude": [
+    "**/*.min.js",
+    "**/*.test.ts",
+    "node_modules/**",
+    ".git/**",
+    "dist/**"
+  ],
+  "maxFileSize": 500000,
+  "skipBinaryFiles": true,
+  "skipGeneratedFiles": true,
+  "customFiles": {
+    "large-important-files": {
+      "include": ["src/some-important-file.ts"],
+      "maxSize": 2000000
+    }
+  },
+  "documentation": {
+    "type": "both",
+    "format": "json",
+    "outputPath": "./documentation.json"
+  }
+}
+```
 
-No additional requirements or dependencies needed!
+You can also configure the extension through the VS Code settings UI:
 
-## Extension Settings
+1. Go to the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac)
+2. Type "Code Cartographer: Configure Settings" 
+3. Use the form interface to adjust your configuration
 
-This extension contributes the following settings:
+### Configuration Options
 
-* `codeCartographer.outputFormat`: Output format for documentation
-* `codeCartographer.documentationType`: Type of documentation to generate
-* `codeCartographer.ignorePatterns`: Additional patterns to ignore beyond .gitignore
+| Option | Description |
+|--------|-------------|
+| `include` | Glob patterns for files to include |
+| `exclude` | Glob patterns for files to exclude |
+| `maxFileSize` | Maximum file size in bytes to include |
+| `skipBinaryFiles` | Automatically skip binary files |
+| `skipGeneratedFiles` | Skip files that appear to be machine-generated |
+| `customFiles` | Special rules for specific files (overrides default settings) |
+| `documentation.type` | Type of documentation to generate (`structure`, `documentation`, or `both`) |
+| `documentation.format` | Output format (`json`, `txt`, or `csv`) |
+| `documentation.outputPath` | Path where to save documentation |
 
-## Known Issues
+## Commands
 
-Please report issues on the GitHub repository.
+Code Cartographer provides several commands available from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac):
+
+- **Generate Documentation**: Creates comprehensive documentation for your project
+- **View Documentation**: Opens an existing documentation file in the viewer
+- **Configure Settings**: Opens the configuration UI
+- **Create Config File**: Generates a default configuration file in your project root
+- **Quick Analyze Project**: Provides a fast overview of your project structure
+- **Show Logs**: Opens the extension logs for troubleshooting
+
+## Troubleshooting
+
+If you encounter issues with Code Cartographer, here are some steps to try:
+
+1. **Enable Debug Mode**: Set `codeCartographer.debugMode` to `true` in your VS Code settings
+2. **Check the Logs**: Run the "Show Logs" command to view detailed diagnostic information
+3. **Verify Configuration**: Make sure your `cartographer.config.json` file or VS Code settings have the correct format and values
+4. **Review Exclusions**: If files are missing, check that they aren't being excluded by your configuration
+
+Common problems and solutions:
+
+- **No files documented**: Check your include/exclude patterns and make sure they match your project structure
+- **Large files skipped**: Increase the `maxFileSize` value or use `customFiles` to allow specific large files
+- **Crashes on large projects**: Try documenting smaller parts of your project first, then increase scope
 
 ## Release Notes
 
+### 0.3.0 - Enhanced Configuration
+
+- Added support for `cartographer.config.json` configuration files
+- New configuration UI for easy setup
+- Improved file filtering with custom file overrides
+- Enhanced documentation viewer
+- Added debug mode with detailed logging
+- Fixed issues with large repositories
+- Added quick project analysis feature
+
+### 0.2.1
+
+- Fixed issue where the extension would generate empty documentation with no files
+- Improved directory traversal to better handle large projects
+- Enhanced file structure display with proper path tracking
+- Made .gitignore parsing more robust (won't fail if file is missing)
+- Added better error handling during file processing
+- Improved performance by skipping ignored directories early
+- Added detailed logging for troubleshooting
+
 ### 0.1.0
 
-Initial release of Code Cartographer with direct documentation
+- Initial release
+- Generate documentation for your codebase in JSON, TXT or CSV format
+- Support for file structure and content documentation
+- Integration with .gitignore to exclude unwanted files
+- Opens the generated document upon clicking 'View Documentation'

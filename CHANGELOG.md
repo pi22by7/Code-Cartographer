@@ -2,6 +2,26 @@
 
 All notable changes to the "Code Cartographer" extension will be documented in this file.
 
+## [0.3.0] - 2025-03-20
+
+### Added
+- Configuration file support with `cartographer.config.json`
+- Interactive configuration UI for easier setup
+- Custom file overrides for special cases
+- Quick project analysis feature
+- Enhanced documentation viewer with search capabilities
+- Comprehensive logging system for better debugging
+- Command to create a default configuration file
+
+### Improved
+- More intelligent file filtering with glob pattern support
+- Better encoding detection for various file types
+- Enhanced performance with parallel file processing
+- More detailed statistics in generated documentation
+- Fixed issues with .gitignore parsing
+- Better handling of large projects
+- Improved binary file detection
+
 ## [0.2.1] - 2025-03-01
 
 ### Fixed

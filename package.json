@@ -3,7 +3,7 @@
   "publisher": "pi22by7",
   "displayName": "Code Cartographer",
   "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -35,13 +35,38 @@
         "title": "View Documentation",
         "category": "Code Cartographer",
         "icon": "$(preview)"
+      },
+      {
+        "command": "code-cartographer.configure",
+        "title": "Configure Settings",
+        "category": "Code Cartographer",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "code-cartographer.createConfig",
+        "title": "Create Config File",
+        "category": "Code Cartographer",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "code-cartographer.analyze",
+        "title": "Quick Analyze Project",
+        "category": "Code Cartographer",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "code-cartographer.showLogs",
+        "title": "Show Logs",
+        "category": "Code Cartographer",
+        "icon": "$(output)"
       }
     ],
     "views": {
       "explorer": [
         {
           "id": "codeCartographerExplorer",
-          "name": "Documentation Explorer"
+          "name": "Documentation Explorer",
+          "icon": "images/logo.png"
         }
       ]
     },
@@ -80,6 +105,21 @@
             "dist"
           ],
           "description": "Additional patterns to ignore beyond .gitignore"
+        },
+        "codeCartographer.maxFileSize": {
+          "type": "number",
+          "default": 500000,
+          "description": "Maximum size of files to include in documentation (in bytes)"
+        },
+        "codeCartographer.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode with extra logging"
+        },
+        "codeCartographer.useConfigFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use cartographer.config.json file if present (overrides VS Code settings)"
         }
       }
     },
@@ -89,6 +129,11 @@
           "command": "code-cartographer.generate",
           "when": "view == codeCartographerExplorer",
           "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.configure",
+          "when": "view == codeCartographerExplorer",
+          "group": "navigation"
         }
       ],
       "explorer/context": [
@@ -96,6 +141,42 @@
           "command": "code-cartographer.generate",
           "when": "explorerResourceIsFolder",
           "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.analyze",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.createConfig",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "code-cartographer.generate",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.view",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.configure",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.createConfig",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.analyze",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.showLogs",
+          "group": "Code Cartographer"
         }
       ]
     }

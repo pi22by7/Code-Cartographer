@@ -1,0 +1,33 @@
+{
+    "version": "1.0",
+    "include": [
+        "src/**/*",
+        "*.json",
+        "*.md"
+    ],
+    "exclude": [
+        "**/*.min.js",
+        "**/*.test.ts",
+        "node_modules/**",
+        ".git/**",
+        "dist/**",
+        "out/**",
+        "coverage/**"
+    ],
+    "maxFileSize": 500000,
+    "skipBinaryFiles": true,
+    "skipGeneratedFiles": true,
+    "customFiles": {
+        "large": {
+            "include": [
+                "src/some-important-file.ts"
+            ],
+            "maxSize": 2000000
+        }
+    },
+    "documentation": {
+        "type": "both",
+        "format": "json",
+        "outputPath": "./documentation.json"
+    }
+}
