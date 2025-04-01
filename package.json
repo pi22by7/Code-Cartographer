@@ -3,7 +3,7 @@
   "publisher": "pi22by7",
   "displayName": "Code Cartographer",
   "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -59,6 +59,26 @@
         "title": "Show Logs",
         "category": "Code Cartographer",
         "icon": "$(output)"
+      },
+      {
+        "command": "code-cartographer.manualSelect",
+        "title": "Manual File Selection",
+        "category": "Code Cartographer",
+        "icon": "$(filter)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "code-cartographer.generate",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+alt+g",
+        "when": "editorFocus || explorerFocus"
+      },
+      {
+        "command": "code-cartographer.manualSelect",
+        "key": "ctrl+shift+alt+g",
+        "mac": "cmd+shift+alt+g",
+        "when": "editorFocus || explorerFocus"
       }
     ],
     "views": {
@@ -143,6 +163,11 @@
           "group": "navigation"
         },
         {
+          "command": "code-cartographer.manualSelect",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
           "command": "code-cartographer.analyze",
           "when": "explorerResourceIsFolder",
           "group": "navigation"
@@ -160,6 +185,10 @@
         },
         {
           "command": "code-cartographer.view",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.manualSelect",
           "group": "Code Cartographer"
         },
         {

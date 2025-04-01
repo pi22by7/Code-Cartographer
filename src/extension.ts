@@ -5,6 +5,7 @@ import { DocumentationTreeProvider } from './treeView';
 import { DocumentationViewer } from './documentationViewer';
 import { ConfigUiProvider } from './configUi';
 import { getLogger, LogLevel } from './logger';
+import { FileSelector } from './fileselector';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Initialize logger
@@ -341,12 +342,46 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	let manualSelectCommand = vscode.commands.registerCommand(
+		'code-cartographer.manualSelect',
+		async () => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage('No workspace folder open');
+				return;
+			}
+
+			// Select workspace folder if multiple
+			let folderUri: vscode.Uri;
+			if (workspaceFolders.length === 1) {
+				folderUri = workspaceFolders[0].uri;
+			} else {
+				const selected = await vscode.window.showQuickPick(
+					workspaceFolders.map(folder => ({
+						label: folder.name,
+						description: folder.uri.fsPath,
+						folderUri: folder.uri
+					})),
+					{ placeHolder: 'Select workspace folder to document' }
+				);
+				if (!selected) { return; }
+				folderUri = selected.folderUri;
+			}
+
+			// Open the manual file selector
+			const fileSelector = new FileSelector(context, folderUri.fsPath);
+			fileSelector.show();
+		}
+	);
+
+
 	context.subscriptions.push(
 		generateCommand,
 		viewCommand,
 		configCommand,
 		analyzeCommand,
-		showLogsCommand
+		showLogsCommand,
+		manualSelectCommand
 	);
 
 	// Register command to create config file

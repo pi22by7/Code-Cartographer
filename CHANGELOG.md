@@ -2,6 +2,35 @@
 
 All notable changes to the "Code Cartographer" extension will be documented in this file.
 
+## [0.4.0] - 2025-04-01
+
+### Added
+- **Manual File Selection Mode**: New hierarchical tree view interface for selecting specific files
+  - Accessed via `Ctrl+Shift+Alt+G` (or `Cmd+Shift+Alt+G` on Mac)
+  - Allows direct selection of individual files and folders
+  - Shows file sizes for better context
+- **Configuration Toggle Options**:
+  - Options to honor or ignore .gitignore and cartographer.config.json settings
+  - Visual indicators showing when configuration files are available
+  - Default behavior automatically adjusts based on available configurations
+- **Enhanced Path Handling**:
+  - Improved handling of relative vs. absolute paths for output files
+  - Better cross-platform path normalization
+- **Search Functionality**:
+  - Live file/folder search in the tree view
+  - Auto-expands parent folders of search matches
+- **UI Improvements**:
+  - Expand/collapse all buttons for easier navigation
+  - Better file/folder selection indicators (full/partial states)
+  - Selected items panel for easy review
+
+### Fixed
+- Resolved issue where output files weren't properly generated with relative paths
+- Fixed performance issues when browsing large directory structures
+- Improved handling of file selection propagation to parent/child nodes
+- Fixed CSS selector syntax in file selection interface
+- Better handling of directory filtering for UI performance
+
 ## [0.3.0] - 2025-03-20
 
 ### Added

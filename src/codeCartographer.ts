@@ -409,7 +409,7 @@ export class CodeCartographer {
     }
 
     private escapeCSV(value: string): string {
-        if (!value) return '';
+        if (!value) { return ''; };
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
             return `"${value.replace(/"/g, '""')}"`;
         }
@@ -417,7 +417,7 @@ export class CodeCartographer {
     }
 
     private formatBytes(bytes: number): string {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) { return '0 Bytes'; };
 
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];

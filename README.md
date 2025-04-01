@@ -11,6 +11,7 @@ Code Cartographer is a powerful VS Code extension that automatically generates c
 - **Interactive Views**: Preview generated documentation in a rich interactive view
 - **Quick Project Analysis**: Get a quick overview of your project's structure and file distribution
 - **Enhanced Debugging**: Comprehensive logging to help diagnose issues
+- **Manual Selection Mode**: Selectively choose files and directories to document with a hierarchical UI
 
 ## Why Use Code Cartographer with LLMs
 
@@ -36,6 +37,15 @@ Install from the VS Code Marketplace or:
 2. Select "Generate Documentation"
 3. Choose your output location
 4. View the generated documentation
+
+### Using Manual Selection Mode
+
+For precise control over what gets documented:
+
+1. Press `Ctrl+Shift+Alt+G` (or `Cmd+Shift+Alt+G` on Mac)
+2. Use the hierarchical tree view to select specific files and folders
+3. Toggle whether to honor .gitignore and cartographer.config.json settings
+4. Click "Generate Documentation"
 
 ### Using a Configuration File
 
@@ -104,11 +114,17 @@ You can also configure the extension through the VS Code settings UI:
 | `documentation.format` | Output format (`json`, `txt`, or `csv`) |
 | `documentation.outputPath` | Path where to save documentation |
 
+## Keyboard Shortcuts
+
+- `Ctrl+Alt+G` (or `Cmd+Alt+G` on Mac): Generate documentation using configuration files
+- `Ctrl+Shift+Alt+G` (or `Cmd+Shift+Alt+G` on Mac): Open manual file selection interface
+
 ## Commands
 
 Code Cartographer provides several commands available from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac):
 
 - **Generate Documentation**: Creates comprehensive documentation for your project
+- **Manual File Selection**: Opens a hierarchical UI for selecting specific files to document
 - **View Documentation**: Opens an existing documentation file in the viewer
 - **Configure Settings**: Opens the configuration UI
 - **Create Config File**: Generates a default configuration file in your project root
@@ -129,33 +145,8 @@ Common problems and solutions:
 - **No files documented**: Check your include/exclude patterns and make sure they match your project structure
 - **Large files skipped**: Increase the `maxFileSize` value or use `customFiles` to allow specific large files
 - **Crashes on large projects**: Try documenting smaller parts of your project first, then increase scope
+- **Output file not found**: If using relative paths, make sure they're relative to your project root
 
 ## Release Notes
 
-### 0.3.0 - Enhanced Configuration
-
-- Added support for `cartographer.config.json` configuration files
-- New configuration UI for easy setup
-- Improved file filtering with custom file overrides
-- Enhanced documentation viewer
-- Added debug mode with detailed logging
-- Fixed issues with large repositories
-- Added quick project analysis feature
-
-### 0.2.1
-
-- Fixed issue where the extension would generate empty documentation with no files
-- Improved directory traversal to better handle large projects
-- Enhanced file structure display with proper path tracking
-- Made .gitignore parsing more robust (won't fail if file is missing)
-- Added better error handling during file processing
-- Improved performance by skipping ignored directories early
-- Added detailed logging for troubleshooting
-
-### 0.1.0
-
-- Initial release
-- Generate documentation for your codebase in JSON, TXT or CSV format
-- Support for file structure and content documentation
-- Integration with .gitignore to exclude unwanted files
-- Opens the generated document upon clicking 'View Documentation'
+See the [CHANGELOG.md](CHANGELOG.md) file for detailed release notes.

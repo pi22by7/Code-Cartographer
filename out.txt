@@ -1,0 +1,3656 @@
+Project Documentation
+================================================================================
+Project Path: E:\Current Projects\code-cartographer
+Generated on: 2025-04-01 12:29:07
+================================================================================
+
+
+File Structure:
+================================================================================
+Directory tree of selected files and folders:
+--------------------------------------------------------------------------------
+code-cartographer
+│  ├── .vscode
+│  ├── src
+│  │  ├── test
+│  │     └── extension.test.ts
+│  │  ├── codeCartographer.ts
+│  │  ├── configProcessor.ts
+│  │  ├── configUi.ts
+│  │  ├── documentationViewer.ts
+│  │  ├── extension.ts
+│  │  ├── fileProcessor.ts
+│  │  ├── gitignoreParser.ts
+│  │  ├── logger.ts
+│     └── treeView.ts
+│  ├── .gitignore
+│  ├── .vscode-test.mjs
+│  ├── .vscodeignore
+│  ├── cartographer.config.json
+│  ├── CHANGELOG.md
+│  ├── esbuild.js
+│  ├── eslint.config.mjs
+│  ├── package.json
+│  ├── README.md
+   └── tsconfig.json
+
+--------------------------------------------------------------------------------
+Total items: 24
+
+File Contents:
+================================================================================
+
+## File: .gitignore
+Size: 0.07 KB
+================================================================================
+
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+out.json
+documentation.json
+
+
+## File: .vscode-test.mjs
+Size: 0.11 KB
+================================================================================
+
+import { defineConfig } from '@vscode/test-cli';
+
+export default defineConfig({
+	files: 'out/test/**/*.test.js',
+});
+
+
+
+## File: .vscodeignore
+Size: 0.21 KB
+================================================================================
+
+.vscode/**
+.vscode-test/**
+out/**
+node_modules/**
+src/**
+.gitignore
+.yarnrc
+esbuild.js
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/eslint.config.mjs
+**/*.map
+**/*.ts
+**/.vscode-test.*
+images/logo.svg
+logo.js
+
+
+## File: cartographer.config.json
+Size: 0.68 KB
+================================================================================
+
+{
+    "version": "1.0",
+    "include": [
+        "src/**/*",
+        "*.json",
+        "*.md"
+    ],
+    "exclude": [
+        "**/*.min.js",
+        "**/*.test.ts",
+        "node_modules/**",
+        ".git/**",
+        "dist/**",
+        "out/**",
+        "coverage/**"
+    ],
+    "maxFileSize": 500000,
+    "skipBinaryFiles": true,
+    "skipGeneratedFiles": true,
+    "customFiles": {
+        "large": {
+            "include": [
+                "src/some-important-file.ts"
+            ],
+            "maxSize": 2000000
+        }
+    },
+    "documentation": {
+        "type": "both",
+        "format": "json",
+        "outputPath": "./documentation.json"
+    }
+}
+
+
+## File: CHANGELOG.md
+Size: 1.79 KB
+================================================================================
+
+# Change Log
+
+All notable changes to the "Code Cartographer" extension will be documented in this file.
+
+## [0.3.0] - 2025-03-20
+
+### Added
+- Configuration file support with `cartographer.config.json`
+- Interactive configuration UI for easier setup
+- Custom file overrides for special cases
+- Quick project analysis feature
+- Enhanced documentation viewer with search capabilities
+- Comprehensive logging system for better debugging
+- Command to create a default configuration file
+
+### Improved
+- More intelligent file filtering with glob pattern support
+- Better encoding detection for various file types
+- Enhanced performance with parallel file processing
+- More detailed statistics in generated documentation
+- Fixed issues with .gitignore parsing
+- Better handling of large projects
+- Improved binary file detection
+
+## [0.2.1] - 2025-03-01
+
+### Fixed
+- Fixed issue where the extension would generate empty documentation with no files
+- Improved directory traversal to better handle large projects
+- Enhanced file structure display with proper path tracking
+- Made .gitignore parsing more robust (won't fail if file is missing)
+- Added better error handling during file processing
+- Improved performance by skipping ignored directories early
+- Added detailed logging for troubleshooting
+
+### Added
+- Better sorting of file structure (directories first, then files alphabetically)
+- More user-friendly progress reporting during documentation generation
+- View documentation in a rich, interactive webview with search functionality
+
+## [0.1.0] - 2025-02-28
+
+### Added
+- Initial release
+- Generate documentation for your codebase in JSON, TXT or CSV format
+- Support for file structure and content documentation
+- Integration with .gitignore to exclude unwanted files
+- Opens the generated document upon clicking 'View Documentation'
+
+
+## File: esbuild.js
+Size: 1.15 KB
+================================================================================
+
+const esbuild = require("esbuild");
+
+const production = process.argv.includes('--production');
+const watch = process.argv.includes('--watch');
+
+/**
+ * @type {import('esbuild').Plugin}
+ */
+const esbuildProblemMatcherPlugin = {
+	name: 'esbuild-problem-matcher',
+
+	setup(build) {
+		build.onStart(() => {
+			console.log('[watch] build started');
+		});
+		build.onEnd((result) => {
+			result.errors.forEach(({ text, location }) => {
+				console.error(`âœ˜ [ERROR] ${text}`);
+				console.error(`    ${location.file}:${location.line}:${location.column}:`);
+			});
+			console.log('[watch] build finished');
+		});
+	},
+};
+
+async function main() {
+	const ctx = await esbuild.context({
+		entryPoints: [
+			'src/extension.ts'
+		],
+		bundle: true,
+		format: 'cjs',
+		minify: production,
+		sourcemap: !production,
+		sourcesContent: false,
+		platform: 'node',
+		outfile: 'dist/extension.js',
+		external: ['vscode'],
+		logLevel: 'silent',
+		plugins: [
+			/* add to the end of plugins array */
+			esbuildProblemMatcherPlugin,
+		],
+	});
+	if (watch) {
+		await ctx.watch();
+	} else {
+		await ctx.rebuild();
+		await ctx.dispose();
+	}
+}
+
+main().catch(e => {
+	console.error(e);
+	process.exit(1);
+});
+
+
+
+## File: eslint.config.mjs
+Size: 0.61 KB
+================================================================================
+
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
+
+export default [{
+    files: ["**/*.ts"],
+}, {
+    plugins: {
+        "@typescript-eslint": typescriptEslint,
+    },
+
+    languageOptions: {
+        parser: tsParser,
+        ecmaVersion: 2022,
+        sourceType: "module",
+    },
+
+    rules: {
+        "@typescript-eslint/naming-convention": ["warn", {
+            selector: "import",
+            format: ["camelCase", "PascalCase"],
+        }],
+
+        curly: "warn",
+        eqeqeq: "warn",
+        "no-throw-literal": "warn",
+        semi: "warn",
+    },
+}];
+
+
+## File: package.json
+Size: 5.97 KB
+================================================================================
+
+{
+  "name": "code-cartographer",
+  "publisher": "pi22by7",
+  "displayName": "Code Cartographer",
+  "description": "Automatically generate comprehensive documentation of your codebase optimized for LLM context windows",
+  "version": "0.3.0",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pi22by7/Code-Cartographer"
+  },
+  "author": {
+    "name": "pi22by7"
+  },
+  "icon": "images/logo.png",
+  "license": "MIT",
+  "categories": [
+    "Other"
+  ],
+  "pricing": "Free",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "code-cartographer.generate",
+        "title": "Generate Documentation",
+        "category": "Code Cartographer",
+        "icon": "$(map)"
+      },
+      {
+        "command": "code-cartographer.view",
+        "title": "View Documentation",
+        "category": "Code Cartographer",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "code-cartographer.configure",
+        "title": "Configure Settings",
+        "category": "Code Cartographer",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "code-cartographer.createConfig",
+        "title": "Create Config File",
+        "category": "Code Cartographer",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "code-cartographer.analyze",
+        "title": "Quick Analyze Project",
+        "category": "Code Cartographer",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "code-cartographer.showLogs",
+        "title": "Show Logs",
+        "category": "Code Cartographer",
+        "icon": "$(output)"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "codeCartographerExplorer",
+          "name": "Documentation Explorer",
+          "icon": "images/logo.png"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Code Cartographer",
+      "properties": {
+        "codeCartographer.outputFormat": {
+          "type": "string",
+          "enum": [
+            "json",
+            "txt",
+            "csv"
+          ],
+          "default": "json",
+          "description": "Output format for documentation"
+        },
+        "codeCartographer.documentationType": {
+          "type": "string",
+          "enum": [
+            "structure",
+            "documentation",
+            "both"
+          ],
+          "default": "both",
+          "description": "Type of documentation to generate"
+        },
+        "codeCartographer.ignorePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "node_modules",
+            ".git",
+            "out",
+            "dist"
+          ],
+          "description": "Additional patterns to ignore beyond .gitignore"
+        },
+        "codeCartographer.maxFileSize": {
+          "type": "number",
+          "default": 500000,
+          "description": "Maximum size of files to include in documentation (in bytes)"
+        },
+        "codeCartographer.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode with extra logging"
+        },
+        "codeCartographer.useConfigFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use cartographer.config.json file if present (overrides VS Code settings)"
+        }
+      }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "code-cartographer.generate",
+          "when": "view == codeCartographerExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.configure",
+          "when": "view == codeCartographerExplorer",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "code-cartographer.generate",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.analyze",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "code-cartographer.createConfig",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "code-cartographer.generate",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.view",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.configure",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.createConfig",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.analyze",
+          "group": "Code Cartographer"
+        },
+        {
+          "command": "code-cartographer.showLogs",
+          "group": "Code Cartographer"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/micromatch": "^4.0.9",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.97.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.19.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "micromatch": "^4.0.8"
+  }
+}
+
+
+## File: README.md
+Size: 6.10 KB
+================================================================================
+
+# Code Cartographer
+
+Code Cartographer is a powerful VS Code extension that automatically generates comprehensive documentation of your codebase, optimized for providing context to Large Language Models (LLMs).
+
+## Features
+
+- **Project Documentation**: Generate detailed file structure and content documentation
+- **Flexible Configuration**: Use a dedicated configuration file to control what gets documented
+- **Intelligent Filtering**: Skip binary files, generated code, and large files automatically
+- **Multiple Output Formats**: Choose between JSON, TXT, and CSV outputs
+- **Interactive Views**: Preview generated documentation in a rich interactive view
+- **Quick Project Analysis**: Get a quick overview of your project's structure and file distribution
+- **Enhanced Debugging**: Comprehensive logging to help diagnose issues
+
+## Why Use Code Cartographer with LLMs
+
+Code Cartographer was designed with LLM workflows in mind:
+
+- **Optimized Context**: Generate documentation that fits within LLM context windows
+- **Better Comprehension**: Help LLMs understand your codebase structure and relationships
+- **Efficient Interaction**: Get more accurate code suggestions by providing complete project context
+- **Focused Documentation**: Include only the files and code that matter using flexible configuration
+
+## Getting Started
+
+### Installation
+
+Install from the VS Code Marketplace or:
+
+1. Press `Ctrl+P` (or `Cmd+P` on Mac)
+2. Type `ext install pi22by7.code-cartographer`
+
+### Quick Start
+
+1. Right-click on a project folder in the explorer
+2. Select "Generate Documentation"
+3. Choose your output location
+4. View the generated documentation
+
+### Using a Configuration File
+
+For more control over what gets documented, create a configuration file:
+
+1. Right-click on a project folder in the explorer
+2. Select "Create Config File" to generate a `cartographer.config.json` file
+3. Customize the patterns for included and excluded files
+4. Run "Generate Documentation" to use your custom configuration
+
+## Configuration
+
+### Configuration File
+
+The recommended way to configure Code Cartographer is with a `cartographer.config.json` file in your project root. This gives you precise control over what gets documented:
+
+```json
+{
+  "version": "1.0",
+  "include": [
+    "src/**/*",
+    "*.json",
+    "*.md"
+  ],
+  "exclude": [
+    "**/*.min.js",
+    "**/*.test.ts",
+    "node_modules/**",
+    ".git/**",
+    "dist/**"
+  ],
+  "maxFileSize": 500000,
+  "skipBinaryFiles": true,
+  "skipGeneratedFiles": true,
+  "customFiles": {
+    "large-important-files": {
+      "include": ["src/some-important-file.ts"],
+      "maxSize": 2000000
+    }
+  },
+  "documentation": {
+    "type": "both",
+    "format": "json",
+    "outputPath": "./documentation.json"
+  }
+}
+```
+
+You can also configure the extension through the VS Code settings UI:
+
+1. Go to the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac)
+2. Type "Code Cartographer: Configure Settings" 
+3. Use the form interface to adjust your configuration
+
+### Configuration Options
+
+| Option | Description |
+|--------|-------------|
+| `include` | Glob patterns for files to include |
+| `exclude` | Glob patterns for files to exclude |
+| `maxFileSize` | Maximum file size in bytes to include |
+| `skipBinaryFiles` | Automatically skip binary files |
+| `skipGeneratedFiles` | Skip files that appear to be machine-generated |
+| `customFiles` | Special rules for specific files (overrides default settings) |
+| `documentation.type` | Type of documentation to generate (`structure`, `documentation`, or `both`) |
+| `documentation.format` | Output format (`json`, `txt`, or `csv`) |
+| `documentation.outputPath` | Path where to save documentation |
+
+## Commands
+
+Code Cartographer provides several commands available from the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac):
+
+- **Generate Documentation**: Creates comprehensive documentation for your project
+- **View Documentation**: Opens an existing documentation file in the viewer
+- **Configure Settings**: Opens the configuration UI
+- **Create Config File**: Generates a default configuration file in your project root
+- **Quick Analyze Project**: Provides a fast overview of your project structure
+- **Show Logs**: Opens the extension logs for troubleshooting
+
+## Troubleshooting
+
+If you encounter issues with Code Cartographer, here are some steps to try:
+
+1. **Enable Debug Mode**: Set `codeCartographer.debugMode` to `true` in your VS Code settings
+2. **Check the Logs**: Run the "Show Logs" command to view detailed diagnostic information
+3. **Verify Configuration**: Make sure your `cartographer.config.json` file or VS Code settings have the correct format and values
+4. **Review Exclusions**: If files are missing, check that they aren't being excluded by your configuration
+
+Common problems and solutions:
+
+- **No files documented**: Check your include/exclude patterns and make sure they match your project structure
+- **Large files skipped**: Increase the `maxFileSize` value or use `customFiles` to allow specific large files
+- **Crashes on large projects**: Try documenting smaller parts of your project first, then increase scope
+
+## Release Notes
+
+### 0.3.0 - Enhanced Configuration
+
+- Added support for `cartographer.config.json` configuration files
+- New configuration UI for easy setup
+- Improved file filtering with custom file overrides
+- Enhanced documentation viewer
+- Added debug mode with detailed logging
+- Fixed issues with large repositories
+- Added quick project analysis feature
+
+### 0.2.1
+
+- Fixed issue where the extension would generate empty documentation with no files
+- Improved directory traversal to better handle large projects
+- Enhanced file structure display with proper path tracking
+- Made .gitignore parsing more robust (won't fail if file is missing)
+- Added better error handling during file processing
+- Improved performance by skipping ignored directories early
+- Added detailed logging for troubleshooting
+
+### 0.1.0
+
+- Initial release
+- Generate documentation for your codebase in JSON, TXT or CSV format
+- Support for file structure and content documentation
+- Integration with .gitignore to exclude unwanted files
+- Opens the generated document upon clicking 'View Documentation'
+
+
+## File: src\codeCartographer.ts
+Size: 22.69 KB
+================================================================================
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { promisify } from 'util';
+import * as vscode from 'vscode';
+import { ConfigProcessor } from './configProcessor';
+import { FileProcessor, FileProcessingOptions } from './fileProcessor';
+import { getLogger, LogLevel } from './logger';
+
+const writeFileAsync = promisify(fs.writeFile);
+const readdirAsync = promisify(fs.readdir);
+const existsAsync = promisify(fs.exists);
+const mkdirAsync = promisify(fs.mkdir);
+
+export interface DocumentationStats {
+    totalFiles: number;
+    totalDocumentedFiles: number;
+    totalSize: number;
+    documentedSize: number;
+    largestFile: { path: string; size: number };
+    averageFileSize: number;
+    fileTypes: Record<string, number>;
+    startTime: Date;
+    endTime?: Date;
+    duration?: number;
+}
+
+export interface DocumentOptions {
+    outputPath: string;
+    outputFormat?: string;
+    documentationType?: string;
+    includeItems?: string[];
+    onProgress?: (message: string, percent: number) => void;
+    debugMode?: boolean;
+}
+
+export class CodeCartographer {
+    private rootDir: string;
+    private configProcessor: ConfigProcessor;
+    private fileProcessor: FileProcessor;
+    private logger = getLogger();
+    private stats: DocumentationStats;
+    private processedFiles: Set<string> = new Set();
+    private progressCallback?: (message: string, percent: number) => void;
+
+    constructor(rootDir: string) {
+        this.rootDir = rootDir;
+        this.configProcessor = new ConfigProcessor(rootDir);
+        this.fileProcessor = new FileProcessor();
+
+        // Initialize stats
+        this.stats = {
+            totalFiles: 0,
+            totalDocumentedFiles: 0,
+            totalSize: 0,
+            documentedSize: 0,
+            largestFile: { path: '', size: 0 },
+            averageFileSize: 0,
+            fileTypes: {},
+            startTime: new Date()
+        };
+
+        this.logger.info(`EnhancedCodeCartographer initialized for: ${rootDir}`);
+    }
+
+    /**
+     * Set the debug mode
+     */
+    public setDebugMode(enabled: boolean): void {
+        if (enabled) {
+            this.logger.setLogLevel(LogLevel.DEBUG);
+            this.logger.enableFileLogging();
+            this.logger.debug('Debug mode enabled');
+        } else {
+            this.logger.setLogLevel(LogLevel.INFO);
+        }
+    }
+
+    /**
+     * Generate config file in the project root
+     */
+    public async generateConfigFile(): Promise<string> {
+        const configPath = path.join(this.rootDir, 'cartographer.config.json');
+        this.configProcessor.saveConfig(configPath);
+        this.logger.info(`Generated config file at: ${configPath}`);
+        return configPath;
+    }
+
+    /**
+     * Process a single file
+     */
+    private async processFile(filePath: string): Promise<any | null> {
+        try {
+            if (this.processedFiles.has(filePath)) {
+                return null;
+            }
+
+            this.processedFiles.add(filePath);
+
+            // Skip if file should be excluded based on config
+            if (!this.configProcessor.shouldIncludeFile(filePath)) {
+                this.logger.debug(`Skipping excluded file: ${filePath}`);
+                return null;
+            }
+
+            // Get max file size for this path (could be custom)
+            const maxFileSize = this.configProcessor.getMaxFileSizeForPath(filePath);
+
+            // Process the file
+            const processingOptions: FileProcessingOptions = {
+                maxSize: maxFileSize,
+                skipBinary: this.configProcessor.shouldSkipBinaryFiles(),
+                skipGenerated: this.configProcessor.shouldSkipGeneratedFiles(),
+                onProgress: (filePath, fileSize) => {
+                    // Update statistics
+                    this.stats.totalFiles++;
+                    this.stats.totalSize += fileSize;
+
+                    // Update largest file if applicable
+                    if (fileSize > this.stats.largestFile.size) {
+                        this.stats.largestFile = { path: filePath, size: fileSize };
+                    }
+
+                    // Update file type statistics
+                    const ext = path.extname(filePath).toLowerCase();
+                    this.stats.fileTypes[ext] = (this.stats.fileTypes[ext] || 0) + 1;
+                }
+            };
+
+            const result = await this.fileProcessor.processFile(filePath, processingOptions);
+
+            if (result) {
+                this.stats.totalDocumentedFiles++;
+                this.stats.documentedSize += result.size;
+
+                return {
+                    path: path.relative(this.rootDir, filePath),
+                    content: result.content,
+                    size: result.size
+                };
+            }
+
+            return null;
+        } catch (err) {
+            this.logger.error(`Error processing ${filePath}:`, err);
+            return null;
+        }
+    }
+
+    /**
+     * Build file structure tree
+     */
+    private async getFileStructure(includeItems: string[] = []): Promise<any> {
+        const structure = {
+            name: path.basename(this.rootDir),
+            type: 'directory',
+            path: this.rootDir,
+            children: []
+        };
+
+        let filesToProcess: string[] = [];
+        if (includeItems.length === 0) {
+            // Get all files in the directory recursively
+            filesToProcess = await this.getAllFiles(this.rootDir);
+            this.logger.info(`Found ${filesToProcess.length} total files to process`);
+        } else {
+            filesToProcess = includeItems;
+            this.logger.info(`Using ${filesToProcess.length} provided files to process`);
+        }
+
+        // Filter using the config processor
+        const filteredFiles = filesToProcess.filter(file =>
+            this.configProcessor.shouldIncludeFile(file)
+        );
+        this.logger.info(`After filtering, ${filteredFiles.length} files remain`);
+
+        // Add all files to the structure
+        for (const fullPath of filteredFiles) {
+            const relativePath = path.relative(this.rootDir, fullPath);
+            this.addPathToStructure(structure, fullPath, relativePath);
+        }
+
+        return structure;
+    }
+
+    /**
+     * Helper method to add a path to the file structure tree
+     */
+    private addPathToStructure(
+        structure: any,
+        fullPath: string,
+        relativePath: string
+    ): void {
+        const parts = relativePath.split(path.sep);
+        let current = structure;
+
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (!part) { continue; } // Skip empty parts
+
+            const isLast = i === parts.length - 1;
+            const isFile = isLast && fs.statSync(fullPath).isFile();
+            const currentRelativePath = parts.slice(0, i + 1).join(path.sep);
+            const currentFullPath = path.join(this.rootDir, currentRelativePath);
+
+            // Find existing node or create new one
+            let node = current.children.find((child: any) => child.name === part);
+
+            if (!node) {
+                node = {
+                    name: part,
+                    type: isFile ? 'file' : 'directory',
+                    path: currentFullPath
+                };
+
+                if (!isFile) {
+                    node.children = [];
+                } else {
+                    try {
+                        const stats = fs.statSync(fullPath);
+                        node.size = stats.size;
+
+                        // Add extra metadata for files
+                        const ext = path.extname(fullPath).toLowerCase();
+                        node.extension = ext;
+
+                        // Detect file type
+                        const fileTypeMap: Record<string, string> = {
+                            '.js': 'JavaScript',
+                            '.ts': 'TypeScript',
+                            '.jsx': 'React JSX',
+                            '.tsx': 'React TSX',
+                            '.html': 'HTML',
+                            '.css': 'CSS',
+                            '.json': 'JSON',
+                            '.md': 'Markdown'
+                        };
+
+                        node.fileType = fileTypeMap[ext] || 'Unknown';
+                    } catch (error) {
+                        this.logger.error(`Error getting stats for ${fullPath}:`, error);
+                        node.size = 0;
+                    }
+                }
+
+                current.children.push(node);
+            }
+
+            if (!isFile) {
+                current = node;
+            }
+        }
+    }
+
+    /**
+     * Get all files recursively from a directory
+     */
+    private async getAllFiles(dir: string): Promise<string[]> {
+        try {
+            const entries = await readdirAsync(dir, { withFileTypes: true });
+
+            // Process entries in parallel for performance
+            const entriesPromises = entries.map(async entry => {
+                const fullPath = path.join(dir, entry.name);
+
+                // Early skip for directories we know we want to exclude
+                if (entry.isDirectory()) {
+                    // Quick check for common directories to skip
+                    const relativePath = path.relative(this.rootDir, fullPath);
+                    if (!this.configProcessor.shouldIncludeFile(fullPath)) {
+                        this.logger.debug(`Skipping excluded directory: ${relativePath}`);
+                        return [];
+                    }
+
+                    return this.getAllFiles(fullPath);
+                } else if (entry.isFile()) {
+                    return [fullPath];
+                }
+
+                return [];
+            });
+
+            const results = await Promise.all(entriesPromises);
+            return results.flat();
+        } catch (error) {
+            this.logger.error(`Error reading directory ${dir}:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Main method to generate documentation
+     */
+    private async writeTxtOutput(outputPath: string, data: any): Promise<void> {
+        let output = `Project Documentation\n`;
+        output += `${'='.repeat(80)}\n`;
+        output += `Project Path: ${data.project_info.path}\n`;
+        output += `Generated on: ${data.project_info.generated_on}\n`;
+        output += `Documentation Type: ${data.project_info.documentation_type}\n`;
+        output += `Total Files: ${data.project_info.total_files}\n`;
+        output += `Documented Files: ${data.project_info.documented_files}\n`;
+        output += `Total Size: ${this.formatBytes(data.project_info.total_size)}\n`;
+        output += `Generation Time: ${(data.project_info.generation_time_ms / 1000).toFixed(2)} seconds\n`;
+        output += `${'='.repeat(80)}\n\n`;
+
+        if (data.file_structure) {
+            output += `\nFile Structure:\n`;
+            output += `${'='.repeat(80)}\n`;
+            output += this.formatStructureAsTxt(data.file_structure);
+            output += `\n${'-'.repeat(80)}\n`;
+        }
+
+        if (data.files && data.files.length > 0) {
+            output += `\nFile Contents:\n`;
+            output += `${'='.repeat(80)}\n`;
+
+            for (const file of data.files) {
+                output += `\n## File: ${file.path}\n`;
+                output += `Size: ${this.formatBytes(file.size)}\n`;
+                output += `${'='.repeat(80)}\n\n`;
+                output += file.content;
+                output += `\n\n`;
+            }
+        }
+
+        // Add statistics
+        if (data.stats) {
+            output += `\nStatistics:\n`;
+            output += `${'='.repeat(80)}\n`;
+            output += `Largest File: ${data.stats.largest_file.path} (${this.formatBytes(data.stats.largest_file.size)})\n`;
+            output += `Average File Size: ${this.formatBytes(data.stats.average_file_size)}\n\n`;
+
+            output += `File Types:\n`;
+            for (const [ext, count] of Object.entries(data.stats.file_types)) {
+                output += `${ext}: ${count}\n`;
+            }
+        }
+
+        await writeFileAsync(outputPath, output, 'utf8');
+    }
+
+    private formatStructureAsTxt(structure: any, prefix = ''): string {
+        let output = `${prefix}${structure.name}\n`;
+
+        if (structure.children) {
+            // Sort directories first, then files alphabetically
+            const sortedChildren = [...structure.children].sort((a, b) => {
+                if (a.type !== b.type) {
+                    return a.type === 'directory' ? -1 : 1;
+                }
+                return a.name.localeCompare(b.name);
+            });
+
+            for (let i = 0; i < sortedChildren.length; i++) {
+                const isLast = i === sortedChildren.length - 1;
+                const childPrefix = prefix + (isLast ? '└── ' : '├── ');
+                const grandchildPrefix = prefix + (isLast ? '    ' : '│   ');
+
+                output += this.formatStructureAsTxt(sortedChildren[i], childPrefix);
+            }
+        }
+
+        return output;
+    }
+
+    private async writeCsvOutput(outputPath: string, data: any): Promise<void> {
+        let output = '';
+
+        // Add project info as metadata
+        output += 'metadata_key,metadata_value\n';
+        output += `project_path,${data.project_info.path}\n`;
+        output += `generated_on,${data.project_info.generated_on}\n`;
+        output += `documentation_type,${data.project_info.documentation_type}\n`;
+        output += `total_files,${data.project_info.total_files}\n`;
+        output += `documented_files,${data.project_info.documented_files}\n`;
+        output += `total_size,${data.project_info.total_size}\n`;
+        output += `generation_time_ms,${data.project_info.generation_time_ms}\n\n`;
+
+        // Add structure if available
+        if (data.file_structure) {
+            output += 'type,name,path,size,extension\n';
+            output += this.formatStructureAsCsv(data.file_structure);
+        }
+
+        // Add CSV statistics
+        if (data.stats) {
+            output += '\nfile_type,count\n';
+            for (const [ext, count] of Object.entries(data.stats.file_types)) {
+                output += `${ext || 'no_extension'},${count}\n`;
+            }
+        }
+
+        await writeFileAsync(outputPath, output, 'utf8');
+    }
+
+    private formatStructureAsCsv(structure: any, parentPath = ''): string {
+        const currentPath = parentPath ?
+            `${parentPath}/${structure.name}` :
+            structure.name;
+
+        let output = `${structure.type},${this.escapeCSV(structure.name)},${this.escapeCSV(currentPath)},${structure.size || ''},${structure.extension || ''}\n`;
+
+        if (structure.children) {
+            for (const child of structure.children) {
+                output += this.formatStructureAsCsv(child, currentPath);
+            }
+        }
+
+        return output;
+    }
+
+    private escapeCSV(value: string): string {
+        if (!value) { return ''; };
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+    }
+
+    private formatBytes(bytes: number): string {
+        if (bytes === 0) { return '0 Bytes'; };
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    private reportProgress(message: string, percent: number): void {
+        if (this.progressCallback) {
+            this.progressCallback(message, percent);
+        }
+    }
+
+    /**
+     * Create initial config file for a project
+     */
+    public static async createInitialConfig(rootDir: string): Promise<string> {
+        const cartographer = new CodeCartographer(rootDir);
+        return cartographer.generateConfigFile();
+    }
+
+    /**
+     * Static method to run a quick analysis of a workspace
+     */
+    public static async quickAnalyze(rootDir: string): Promise<any> {
+        const cartographer = new CodeCartographer(rootDir);
+
+        // Find all files
+        const allFiles = await cartographer.getAllFiles(rootDir);
+
+        const stats = {
+            total_files: allFiles.length,
+            file_types: {} as Record<string, number>,
+            directories: {} as Record<string, number>
+        };
+
+        // Analyze files
+        for (const file of allFiles) {
+            const ext = path.extname(file).toLowerCase();
+            stats.file_types[ext] = (stats.file_types[ext] || 0) + 1;
+
+            // Track directory counts
+            const relativeDir = path.relative(rootDir, path.dirname(file));
+            const topDir = relativeDir.split(path.sep)[0] || '.';
+            stats.directories[topDir] = (stats.directories[topDir] || 0) + 1;
+        }
+
+        return stats;
+    }
+
+    public async document(options: DocumentOptions): Promise<void> {
+        const {
+            outputPath,
+            outputFormat,
+            documentationType,
+            includeItems = [],
+            onProgress,
+            debugMode = false
+        } = options;
+
+        // Set debug mode if requested
+        if (debugMode) {
+            this.setDebugMode(true);
+        }
+
+        // Store progress callback
+        this.progressCallback = onProgress;
+
+        // Reset stats
+        this.stats.startTime = new Date();
+
+        this.logger.info('Starting documentation process...');
+        this.reportProgress('Starting documentation process...', 0);
+
+        // Determine output format and doc type from config if not explicitly provided
+        const docType = documentationType || this.configProcessor.getDocumentationType();
+        const format = outputFormat || this.configProcessor.getOutputFormat();
+
+        // Get destination path
+        const destination = outputPath || this.configProcessor.getOutputPath();
+
+        let fileStructure = null;
+        let fileContents: any[] = [];
+
+        // Generate file structure if needed
+        if (docType === 'structure' || docType === 'both') {
+            this.reportProgress('Analyzing file structure...', 10);
+            this.logger.info('Generating file structure...');
+
+            const items = includeItems.length > 0 ?
+                includeItems.map(item => path.resolve(this.rootDir, item)) : [];
+
+            fileStructure = await this.getFileStructure(items);
+            this.logger.info(`Structure generated with ${fileStructure.children.length} top-level items`);
+        }
+
+        // Generate file documentation if needed
+        if (docType === 'documentation' || docType === 'both') {
+            this.reportProgress('Processing files...', 30);
+            this.logger.info('Generating file documentation...');
+
+            const filesToProcess = includeItems.length > 0 ?
+                includeItems.map(item => path.resolve(this.rootDir, item)) :
+                await this.getAllFiles(this.rootDir);
+
+            this.logger.info(`Generating documentation for ${filesToProcess.length} files`);
+
+            let processed = 0;
+            const totalFiles = filesToProcess.length;
+
+            // Process files in batches to avoid memory issues
+            const batchSize = 20;
+            for (let i = 0; i < totalFiles; i += batchSize) {
+                const batch = filesToProcess.slice(i, i + batchSize);
+
+                // Process batch in parallel
+                const batchResults = await Promise.all(
+                    batch.map(filePath => this.processFile(filePath))
+                );
+
+                // Filter out nulls and add to fileContents
+                fileContents.push(...batchResults.filter(result => result !== null));
+
+                // Update progress
+                processed += batch.length;
+                const percent = Math.floor(30 + (processed / totalFiles) * 50);
+                this.reportProgress(`Processed ${processed}/${totalFiles} files...`, percent);
+            }
+
+            this.logger.info(`Successfully documented ${fileContents.length} files`);
+        }
+
+        // Calculate final statistics
+        this.stats.endTime = new Date();
+        this.stats.duration = this.stats.endTime.getTime() - this.stats.startTime.getTime();
+        this.stats.averageFileSize = this.stats.totalDocumentedFiles > 0 ?
+            this.stats.documentedSize / this.stats.totalDocumentedFiles : 0;
+
+        // Generate output
+        this.reportProgress('Generating output...', 90);
+        this.logger.info('Generating documentation output...');
+
+        // Build output data
+        const outputData = {
+            project_info: {
+                path: this.rootDir,
+                generated_on: new Date().toISOString().replace('T', ' ').substr(0, 19),
+                documentation_type: docType,
+                total_files: this.stats.totalFiles,
+                documented_files: this.stats.totalDocumentedFiles,
+                total_size: this.stats.totalSize,
+                documented_size: this.stats.documentedSize,
+                generation_time_ms: this.stats.duration
+            },
+            file_structure: fileStructure,
+            files: fileContents,
+            stats: {
+                file_types: this.stats.fileTypes,
+                largest_file: this.stats.largestFile,
+                average_file_size: this.stats.averageFileSize
+            }
+        };
+
+        // Create the output directory if it doesn't exist
+        const outputDir = path.dirname(destination);
+        if (!await existsAsync(outputDir)) {
+            await mkdirAsync(outputDir, { recursive: true });
+        }
+
+        // Write output in specified format
+        try {
+            switch (format) {
+                case 'json':
+                    await writeFileAsync(destination, JSON.stringify(outputData, null, 2), 'utf8');
+                    break;
+                case 'txt':
+                    await this.writeTxtOutput(destination, outputData);
+                    break;
+                case 'csv':
+                    await this.writeCsvOutput(destination, outputData);
+                    break;
+                default:
+                    await writeFileAsync(destination, JSON.stringify(outputData, null, 2), 'utf8');
+            }
+            this.logger.info(`Documentation written to ${destination}`);
+        } catch (error) {
+            this.logger.error(`Error writing documentation:`, error);
+            throw error;
+        }
+
+        this.reportProgress('Documentation completed!', 100);
+        this.logger.info('Documentation generation completed successfully');
+    }
+}
+
+
+## File: src\configProcessor.ts
+Size: 6.59 KB
+================================================================================
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as micromatch from 'micromatch';
+import { workspace, Uri } from 'vscode';
+
+export interface CartographerConfig {
+    version: string;
+    include: string[];
+    exclude: string[];
+    maxFileSize: number;
+    skipBinaryFiles: boolean;
+    skipGeneratedFiles: boolean;
+    customFiles?: {
+        [key: string]: {
+            include: string[];
+            maxSize?: number;
+        }
+    };
+    documentation: {
+        type: 'structure' | 'documentation' | 'both';
+        format: 'json' | 'txt' | 'csv';
+        outputPath: string;
+    };
+}
+
+export class ConfigProcessor {
+    private config: CartographerConfig;
+    private rootPath: string;
+    private defaultConfig: CartographerConfig = {
+        version: "1.0",
+        include: ["**/*"],
+        exclude: [
+            "node_modules/**",
+            ".git/**",
+            "dist/**",
+            "out/**",
+            "**/*.min.js",
+            "**/*.map"
+        ],
+        maxFileSize: 500000,
+        skipBinaryFiles: true,
+        skipGeneratedFiles: true,
+        documentation: {
+            type: "both",
+            format: "json",
+            outputPath: "./documentation.json"
+        }
+    };
+
+    constructor(rootPath: string) {
+        this.rootPath = rootPath;
+        this.config = this.loadConfig();
+    }
+
+    private loadConfig(): CartographerConfig {
+        // Look for config in multiple locations with priority:
+        const configLocations = [
+            path.join(this.rootPath, 'cartographer.config.json'),
+            path.join(this.rootPath, '.cartographer.json'),
+            path.join(this.rootPath, '.vscode', 'cartographer.json')
+        ];
+
+        // Check for workspace settings in VS Code
+        const vsCodeConfig = workspace.getConfiguration('codeCartographer');
+
+        // Try to load from file
+        for (const configPath of configLocations) {
+            if (fs.existsSync(configPath)) {
+                try {
+                    console.log(`Loading config from ${configPath}`);
+                    const configContent = fs.readFileSync(configPath, 'utf8');
+                    const parsedConfig = JSON.parse(configContent);
+                    return this.mergeWithDefaultConfig(parsedConfig);
+                } catch (error) {
+                    console.error(`Error loading config from ${configPath}:`, error);
+                }
+            }
+        }
+
+        // No config file found, merge VS Code settings with default
+        return this.mergeWithVsCodeSettings(this.defaultConfig);
+    }
+
+    private mergeWithDefaultConfig(userConfig: Partial<CartographerConfig>): CartographerConfig {
+        // Deep merge, preferring user config values but ensuring all required fields exist
+        return {
+            ...this.defaultConfig,
+            ...userConfig,
+            documentation: {
+                ...this.defaultConfig.documentation,
+                ...(userConfig.documentation || {})
+            }
+        };
+    }
+
+    private mergeWithVsCodeSettings(config: CartographerConfig): CartographerConfig {
+        const vsCodeConfig = workspace.getConfiguration('codeCartographer');
+
+        // Apply VS Code settings if they exist
+        if (vsCodeConfig) {
+            if (vsCodeConfig.has('outputFormat')) {
+                config.documentation.format = vsCodeConfig.get('outputFormat') as any || config.documentation.format;
+            }
+
+            if (vsCodeConfig.has('documentationType')) {
+                config.documentation.type = vsCodeConfig.get('documentationType') as any || config.documentation.type;
+            }
+
+            if (vsCodeConfig.has('ignorePatterns')) {
+                const ignorePatterns = vsCodeConfig.get<string[]>('ignorePatterns') || [];
+                config.exclude = [...config.exclude, ...ignorePatterns];
+            }
+        }
+
+        return config;
+    }
+
+    public shouldIncludeFile(filePath: string): boolean {
+        // Get path relative to project root
+        const relativePath = path.relative(this.rootPath, filePath).replace(/\\/g, '/');
+
+        // Skip excludes first (they have priority)
+        if (micromatch.isMatch(relativePath, this.config.exclude, { dot: true })) {
+            return false;
+        }
+
+        // Check if file is explicitly included
+        if (micromatch.isMatch(relativePath, this.config.include, { dot: true })) {
+            return true;
+        }
+
+        // Check if file is in custom files (special cases)
+        if (this.config.customFiles) {
+            for (const [_, customConfig] of Object.entries(this.config.customFiles)) {
+                if (micromatch.isMatch(relativePath, customConfig.include, { dot: true })) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public getMaxFileSizeForPath(filePath: string): number {
+        // Check if the file has a custom size limit
+        if (this.config.customFiles) {
+            const relativePath = path.relative(this.rootPath, filePath).replace(/\\/g, '/');
+
+            for (const [_, customConfig] of Object.entries(this.config.customFiles)) {
+                if (micromatch.isMatch(relativePath, customConfig.include, { dot: true })) {
+                    if (customConfig.maxSize !== undefined) {
+                        return customConfig.maxSize;
+                    }
+                }
+            }
+        }
+
+        return this.config.maxFileSize;
+    }
+
+    public shouldSkipBinaryFiles(): boolean {
+        return this.config.skipBinaryFiles;
+    }
+
+    public shouldSkipGeneratedFiles(): boolean {
+        return this.config.skipGeneratedFiles;
+    }
+
+    public getDocumentationType(): string {
+        return this.config.documentation.type;
+    }
+
+    public getOutputFormat(): string {
+        return this.config.documentation.format;
+    }
+
+    public getOutputPath(): string {
+        // If the path is relative, make it absolute from the project root
+        if (!path.isAbsolute(this.config.documentation.outputPath)) {
+            return path.join(this.rootPath, this.config.documentation.outputPath);
+        }
+        return this.config.documentation.outputPath;
+    }
+
+    public getConfig(): CartographerConfig {
+        return this.config;
+    }
+
+    // Method to save current config to a file
+    public saveConfig(outputPath?: string): void {
+        const configPath = outputPath || path.join(this.rootPath, 'cartographer.config.json');
+        fs.writeFileSync(configPath, JSON.stringify(this.config, null, 2), 'utf8');
+    }
+}
+
+
+## File: src\configUi.ts
+Size: 28.57 KB
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { ConfigProcessor } from './configProcessor';
+import { getLogger } from './logger';
+
+export class ConfigUiProvider {
+    private panel: vscode.WebviewPanel | undefined;
+    private context: vscode.ExtensionContext;
+    private rootPath: string;
+    private configProcessor: ConfigProcessor;
+    private logger = getLogger();
+
+    constructor(context: vscode.ExtensionContext, rootPath: string) {
+        this.context = context;
+        this.rootPath = rootPath;
+        this.configProcessor = new ConfigProcessor(rootPath);
+    }
+
+    public show(): void {
+        if (this.panel) {
+            this.panel.reveal(vscode.ViewColumn.One);
+        } else {
+            this.panel = vscode.window.createWebviewPanel(
+                'cartographerConfig',
+                'Code Cartographer Configuration',
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true,
+                    localResourceRoots: [
+                        vscode.Uri.file(path.join(this.context.extensionPath, 'media'))
+                    ]
+                }
+            );
+
+            this.panel.onDidDispose(() => {
+                this.panel = undefined;
+            });
+
+            this.panel.webview.onDidReceiveMessage(
+                async (message) => {
+                    switch (message.command) {
+                        case 'saveConfig':
+                            await this.saveConfig(message.config);
+                            return;
+                        case 'generateConfig':
+                            await this.generateDefaultConfig();
+                            return;
+                        case 'showFileExplorer':
+                            await this.showFileExplorer(message.purpose);
+                            return;
+                    }
+                },
+                undefined,
+                this.context.subscriptions
+            );
+
+            this.updateWebviewContent();
+        }
+    }
+
+    private async saveConfig(config: any): Promise<void> {
+        try {
+            const configPath = path.join(this.rootPath, 'cartographer.config.json');
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+
+            vscode.window.showInformationMessage('Configuration saved successfully');
+            this.logger.info(`Configuration saved to ${configPath}`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to save configuration: ${error}`);
+            this.logger.error('Failed to save configuration:', error);
+        }
+    }
+
+    private async generateDefaultConfig(): Promise<void> {
+        try {
+            const configPath = path.join(this.rootPath, 'cartographer.config.json');
+            this.configProcessor.saveConfig(configPath);
+
+            vscode.window.showInformationMessage('Default configuration generated successfully');
+            this.logger.info(`Default configuration generated at ${configPath}`);
+
+            // Reload the webview with the new config
+            this.updateWebviewContent();
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to generate default configuration: ${error}`);
+            this.logger.error('Failed to generate default configuration:', error);
+        }
+    }
+
+    private async showFileExplorer(purpose: string): Promise<void> {
+        try {
+            // Show file dialog according to purpose
+            let files: string[] = [];
+
+            if (purpose === 'include') {
+                // Multi-select for including files
+                const uris = await vscode.window.showOpenDialog({
+                    canSelectMany: true,
+                    defaultUri: vscode.Uri.file(this.rootPath),
+                    openLabel: 'Select Files to Include'
+                });
+
+                if (uris && uris.length > 0) {
+                    files = uris.map(uri => path.relative(this.rootPath, uri.fsPath));
+                }
+            } else if (purpose === 'exclude') {
+                // Multi-select for excluding files
+                const uris = await vscode.window.showOpenDialog({
+                    canSelectMany: true,
+                    defaultUri: vscode.Uri.file(this.rootPath),
+                    openLabel: 'Select Files to Exclude'
+                });
+
+                if (uris && uris.length > 0) {
+                    files = uris.map(uri => path.relative(this.rootPath, uri.fsPath));
+                }
+            } else if (purpose === 'output') {
+                // Single-select for output file
+                const uri = await vscode.window.showSaveDialog({
+                    defaultUri: vscode.Uri.file(path.join(this.rootPath, 'documentation.json')),
+                    saveLabel: 'Set Output File'
+                });
+
+                if (uri) {
+                    files = [path.relative(this.rootPath, uri.fsPath)];
+                }
+            }
+
+            // Send selected files back to webview
+            if (files.length > 0) {
+                this.panel?.webview.postMessage({
+                    command: 'filesSelected',
+                    purpose,
+                    files
+                });
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to show file explorer: ${error}`);
+            this.logger.error('Failed to show file explorer:', error);
+        }
+    }
+
+    private updateWebviewContent(): void {
+        if (!this.panel) {
+            return;
+        }
+
+        // Load configuration
+        let config = this.configProcessor.getConfig();
+
+        // Generate HTML content for the webview
+        const html = this.getWebviewContent(config);
+        this.panel.webview.html = html;
+    }
+
+    private getWebviewContent(config: any): string {
+        return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Code Cartographer Configuration</title>
+            <style>
+                body {
+                    font-family: var(--vscode-font-family);
+                    padding: 20px;
+                    color: var(--vscode-foreground);
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                .form-group {
+                    margin-bottom: 15px;
+                }
+                label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: bold;
+                }
+                input[type="text"], select, textarea {
+                    width: 100%;
+                    padding: 8px;
+                    box-sizing: border-box;
+                    background-color: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 2px;
+                }
+                textarea {
+                    height: 100px;
+                    font-family: monospace;
+                }
+                button {
+                    background-color: var(--vscode-button-background);
+                    color: var(--vscode-button-foreground);
+                    border: none;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    border-radius: 2px;
+                    margin-right: 5px;
+                }
+                button:hover {
+                    background-color: var(--vscode-button-hoverBackground);
+                }
+                .actions {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 20px;
+                }
+                .config-section {
+                    margin-bottom: 30px;
+                    padding: 15px;
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 4px;
+                }
+                .section-title {
+                    margin-top: 0;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                    padding-bottom: 8px;
+                }
+                .help-text {
+                    font-size: 0.9em;
+                    color: var(--vscode-descriptionForeground);
+                    margin-top: 4px;
+                }
+                .path-input-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .path-input-group input {
+                    flex-grow: 1;
+                }
+                .tag-group {
+                    margin-top: 10px;
+                }
+                .tag {
+                    display: inline-block;
+                    background-color: var(--vscode-badge-background);
+                    color: var(--vscode-badge-foreground);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    margin-right: 5px;
+                    margin-bottom: 5px;
+                }
+                .tag button {
+                    background: none;
+                    border: none;
+                    color: var(--vscode-badge-foreground);
+                    cursor: pointer;
+                    margin-left: 4px;
+                    padding: 0 4px;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Code Cartographer Configuration</h1>
+            <p>Configure how the Code Cartographer extension documents your codebase.</p>
+            
+            <div class="config-section">
+                <h2 class="section-title">Basic Settings</h2>
+                
+                <div class="form-group">
+                    <label for="documentationType">Documentation Type:</label>
+                    <select id="documentationType">
+                        <option value="both" ${config.documentation.type === 'both' ? 'selected' : ''}>Both (Structure & Content)</option>
+                        <option value="structure" ${config.documentation.type === 'structure' ? 'selected' : ''}>Structure Only</option>
+                        <option value="documentation" ${config.documentation.type === 'documentation' ? 'selected' : ''}>Content Only</option>
+                    </select>
+                    <div class="help-text">Choose what kind of documentation to generate</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="outputFormat">Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="json" ${config.documentation.format === 'json' ? 'selected' : ''}>JSON</option>
+                        <option value="txt" ${config.documentation.format === 'txt' ? 'selected' : ''}>TXT</option>
+                        <option value="csv" ${config.documentation.format === 'csv' ? 'selected' : ''}>CSV</option>
+                    </select>
+                    <div class="help-text">Choose format for the generated documentation</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="outputPath">Output Path:</label>
+                    <div class="path-input-group">
+                        <input type="text" id="outputPath" value="${config.documentation.outputPath || './documentation.json'}">
+                        <button id="browseOutputPath">Browse</button>
+                    </div>
+                    <div class="help-text">Path where documentation will be saved (relative to workspace root)</div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h2 class="section-title">File Filters</h2>
+                
+                <div class="form-group">
+                    <label for="includePatterns">Include Patterns:</label>
+                    <textarea id="includePatterns">${config.include.join('\n')}</textarea>
+                    <div class="help-text">Glob patterns for files to include (one per line)</div>
+                    <div class="tag-group" id="includeTagGroup">
+                        ${config.include.map((pattern: any) => `
+                            <span class="tag">${pattern}
+                                <button class="remove-tag" data-pattern="${pattern}" data-type="include">×</button>
+                            </span>
+                        `).join('')}
+                    </div>
+                    <button id="addIncludeFiles" style="margin-top: 10px;">Add Files</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="excludePatterns">Exclude Patterns:</label>
+                    <textarea id="excludePatterns">${config.exclude.join('\n')}</textarea>
+                    <div class="help-text">Glob patterns for files to exclude (one per line)</div>
+                    <div class="tag-group" id="excludeTagGroup">
+                        ${config.exclude.map((pattern: any) => `
+                            <span class="tag">${pattern}
+                                <button class="remove-tag" data-pattern="${pattern}" data-type="exclude">×</button>
+                            </span>
+                        `).join('')}
+                    </div>
+                    <button id="addExcludeFiles" style="margin-top: 10px;">Add Files</button>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h2 class="section-title">Advanced Settings</h2>
+                
+                <div class="form-group">
+                    <label for="maxFileSize">Max File Size (bytes):</label>
+                    <input type="number" id="maxFileSize" value="${config.maxFileSize || 500000}">
+                    <div class="help-text">Maximum size of files to include in documentation</div>
+                </div>
+                
+                <div class="form-group">
+                    <div>
+                        <input type="checkbox" id="skipBinaryFiles" ${config.skipBinaryFiles ? 'checked' : ''}>
+                        <label for="skipBinaryFiles" style="display: inline;">Skip Binary Files</label>
+                    </div>
+                    <div class="help-text">Automatically detect and skip binary files</div>
+                </div>
+                
+                <div class="form-group">
+                    <div>
+                        <input type="checkbox" id="skipGeneratedFiles" ${config.skipGeneratedFiles ? 'checked' : ''}>
+                        <label for="skipGeneratedFiles" style="display: inline;">Skip Generated Files</label>
+                    </div>
+                    <div class="help-text">Skip files that appear to be machine-generated</div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h2 class="section-title">Custom File Overrides</h2>
+                <p>Define specific rules for certain files that override the general settings.</p>
+                
+                <div id="customFilesContainer">
+                    ${Object.entries(config.customFiles || {}).map(([key, value]) => `
+                        <div class="custom-file-entry" data-key="${key}">
+                            <h3>${key}</h3>
+                            <div class="form-group">
+                                <label>Include Patterns:</label>
+                                <textarea class="custom-include">${(value as { include: string[] }).include.join('\n')}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Size (bytes):</label>
+                                <input type="number" class="custom-max-size" value="${(value as { maxSize?: number }).maxSize || config.maxFileSize}">
+                            </div>
+                            <button class="remove-custom-entry">Remove</button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <button id="addCustomEntry" style="margin-top: 10px;">Add Custom Override</button>
+            </div>
+            
+            <div class="actions">
+                <div>
+                    <button id="saveConfig">Save Configuration</button>
+                    <button id="generateConfig">Generate Default Config</button>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    const vscode = acquireVsCodeApi();
+                    
+                    // State management
+                    let config = ${JSON.stringify(config)};
+                    
+                    // Save configuration
+                    document.getElementById('saveConfig').addEventListener('click', () => {
+                        // Update config object from form values
+                        config.documentation.type = document.getElementById('documentationType').value;
+                        config.documentation.format = document.getElementById('outputFormat').value;
+                        config.documentation.outputPath = document.getElementById('outputPath').value;
+                        
+                        config.include = document.getElementById('includePatterns').value
+                            .split('\\n')
+                            .map(line => line.trim())
+                            .filter(line => line);
+                            
+                        config.exclude = document.getElementById('excludePatterns').value
+                            .split('\\n')
+                            .map(line => line.trim())
+                            .filter(line => line);
+                            
+                        config.maxFileSize = parseInt(document.getElementById('maxFileSize').value);
+                        config.skipBinaryFiles = document.getElementById('skipBinaryFiles').checked;
+                        config.skipGeneratedFiles = document.getElementById('skipGeneratedFiles').checked;
+                        
+                        // Handle custom file entries
+                        config.customFiles = {};
+                        document.querySelectorAll('.custom-file-entry').forEach(entry => {
+                            const key = entry.dataset.key;
+                            const include = entry.querySelector('.custom-include').value
+                                .split('\\n')
+                                .map(line => line.trim())
+                                .filter(line => line);
+                            const maxSize = parseInt(entry.querySelector('.custom-max-size').value);
+                            
+                            config.customFiles[key] = {
+                                include,
+                                maxSize
+                            };
+                        });
+                        
+                        vscode.postMessage({
+                            command: 'saveConfig',
+                            config
+                        });
+                    });
+                    
+                    // Generate default config
+                    document.getElementById('generateConfig').addEventListener('click', () => {
+                        vscode.postMessage({
+                            command: 'generateConfig'
+                        });
+                    });
+                    
+                    // Browse for output path
+                    document.getElementById('browseOutputPath').addEventListener('click', () => {
+                        vscode.postMessage({
+                            command: 'showFileExplorer',
+                            purpose: 'output'
+                        });
+                    });
+                    
+                    // Add include files
+                    document.getElementById('addIncludeFiles').addEventListener('click', () => {
+                        vscode.postMessage({
+                            command: 'showFileExplorer',
+                            purpose: 'include'
+                        });
+                    });
+                    
+                    // Add exclude files
+                    document.getElementById('addExcludeFiles').addEventListener('click', () => {
+                        vscode.postMessage({
+                            command: 'showFileExplorer',
+                            purpose: 'exclude'
+                        });
+                    });
+                    
+                    // Add custom entry
+                    document.getElementById('addCustomEntry').addEventListener('click', () => {
+                        const key = prompt('Enter a name for this custom override:');
+                        if (!key) return;
+                        
+                        const container = document.getElementById('customFilesContainer');
+                        const entryHtml = \`
+                            <div class="custom-file-entry" data-key="\${key}">
+                                <h3>\${key}</h3>
+                                <div class="form-group">
+                                    <label>Include Patterns:</label>
+                                    <textarea class="custom-include"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Max Size (bytes):</label>
+                                    <input type="number" class="custom-max-size" value="\${config.maxFileSize}">
+                                </div>
+                                <button class="remove-custom-entry">Remove</button>
+                            </div>
+                        \`;
+                        
+                        container.insertAdjacentHTML('beforeend', entryHtml);
+                        attachRemoveEntryHandlers();
+                    });
+                    
+                    // Remove tags
+                    document.querySelectorAll('.remove-tag').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            const pattern = e.target.dataset.pattern;
+                            const type = e.target.dataset.type;
+                            
+                            if (type === 'include') {
+                                const patterns = document.getElementById('includePatterns').value
+                                    .split('\\n')
+                                    .filter(p => p.trim() !== pattern);
+                                document.getElementById('includePatterns').value = patterns.join('\\n');
+                                e.target.parentElement.remove();
+                            } else if (type === 'exclude') {
+                                const patterns = document.getElementById('excludePatterns').value
+                                    .split('\\n')
+                                    .filter(p => p.trim() !== pattern);
+                                document.getElementById('excludePatterns').value = patterns.join('\\n');
+                                e.target.parentElement.remove();
+                            }
+                        });
+                    });
+                    
+                    // Attach handlers for remove custom entry buttons
+                    function attachRemoveEntryHandlers() {
+                        document.querySelectorAll('.remove-custom-entry').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                e.target.closest('.custom-file-entry').remove();
+                            });
+                        });
+                    }
+                    attachRemoveEntryHandlers();
+                    
+                    // Handle messages from the extension
+                    window.addEventListener('message', event => {
+                        const message = event.data;
+                        
+                        if (message.command === 'filesSelected') {
+                            if (message.purpose === 'include') {
+                                const currentPatterns = document.getElementById('includePatterns').value;
+                                const newPatterns = message.files.join('\\n');
+                                document.getElementById('includePatterns').value = currentPatterns ? 
+                                    currentPatterns + '\\n' + newPatterns : newPatterns;
+                                
+                                // Update tags
+                                const tagGroup = document.getElementById('includeTagGroup');
+                                message.files.forEach(file => {
+                                    const tagHtml = \`
+                                        <span class="tag">\${file}
+                                            <button class="remove-tag" data-pattern="\${file}" data-type="include">×</button>
+                                        </span>
+                                    \`;
+                                    tagGroup.insertAdjacentHTML('beforeend', tagHtml);
+                                });
+                                
+                                // Attach handlers to new tags
+                                tagGroup.querySelectorAll('.remove-tag').forEach(button => {
+                                    button.addEventListener('click', (e) => {
+                                        const pattern = e.target.dataset.pattern;
+                                        const patterns = document.getElementById('includePatterns').value
+                                            .split('\\n')
+                                            .filter(p => p.trim() !== pattern);
+                                        document.getElementById('includePatterns').value = patterns.join('\\n');
+                                        e.target.parentElement.remove();
+                                    });
+                                });
+                            } else if (message.purpose === 'exclude') {
+                                const currentPatterns = document.getElementById('excludePatterns').value;
+                                const newPatterns = message.files.join('\\n');
+                                document.getElementById('excludePatterns').value = currentPatterns ? 
+                                    currentPatterns + '\\n' + newPatterns : newPatterns;
+                                
+                                // Update tags
+                                const tagGroup = document.getElementById('excludeTagGroup');
+                                message.files.forEach(file => {
+                                    const tagHtml = \`
+                                        <span class="tag">\${file}
+                                            <button class="remove-tag" data-pattern="\${file}" data-type="exclude">×</button>
+                                        </span>
+                                    \`;
+                                    tagGroup.insertAdjacentHTML('beforeend', tagHtml);
+                                });
+                                
+                                // Attach handlers to new tags
+                                tagGroup.querySelectorAll('.remove-tag').forEach(button => {
+                                    button.addEventListener('click', (e) => {
+                                        const pattern = e.target.dataset.pattern;
+                                        const patterns = document.getElementById('excludePatterns').value
+                                            .split('\\n')
+                                            .filter(p => p.trim() !== pattern);
+                                        document.getElementById('excludePatterns').value = patterns.join('\\n');
+                                        e.target.parentElement.remove();
+                                    });
+                                });
+                            } else if (message.purpose === 'output') {
+                                document.getElementById('outputPath').value = message.files[0];
+                            }
+                        }
+                    });
+                })();
+            </script>
+        </body>
+        </html>`;
+    }
+}
+
+
+## File: src\documentationViewer.ts
+Size: 18.60 KB
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+
+export class DocumentationViewer {
+    private panel: vscode.WebviewPanel | undefined;
+    private context: vscode.ExtensionContext;
+
+    constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+    }
+
+    public async showDocumentation(documentationPath: string): Promise<void> {
+        const docFileName = path.basename(documentationPath);
+        const docFileExt = path.extname(documentationPath).toLowerCase();
+
+        // Create or reveal panel
+        if (this.panel) {
+            this.panel.reveal(vscode.ViewColumn.One);
+        } else {
+            this.panel = vscode.window.createWebviewPanel(
+                'codeCartographerDocViewer',
+                `Documentation: ${docFileName}`,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true,
+                    localResourceRoots: [
+                        vscode.Uri.file(path.join(this.context.extensionPath, 'media'))
+                    ]
+                }
+            );
+
+            // Handle panel disposal
+            this.panel.onDidDispose(() => {
+                this.panel = undefined;
+            });
+        }
+
+        // Update panel title
+        this.panel.title = `Documentation: ${docFileName}`;
+
+        try {
+            const docContent = fs.readFileSync(documentationPath, 'utf8');
+            const parsedContent = this.parseDocumentation(docContent, docFileExt);
+            this.panel.webview.html = this.generateHtml(parsedContent, docFileExt);
+
+            // Handle webview messages
+            this.panel.webview.onDidReceiveMessage(
+                message => {
+                    switch (message.command) {
+                        case 'openFile':
+                            if (message.filePath) {
+                                // Convert the relative path to absolute
+                                const projectPath = parsedContent.project_info.path;
+                                const fullPath = path.join(projectPath, message.filePath);
+                                vscode.commands.executeCommand('vscode.open', vscode.Uri.file(fullPath));
+                            }
+                            return;
+                    }
+                },
+                undefined,
+                this.context.subscriptions
+            );
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to load documentation: ${error}`);
+            this.panel.dispose();
+        }
+    }
+
+    private parseDocumentation(content: string, fileExtension: string): any {
+        switch (fileExtension) {
+            case '.json':
+                return JSON.parse(content);
+            case '.txt':
+                // For text files, we'll create a simple structure
+                return {
+                    project_info: {
+                        path: 'Unknown',
+                        generated_on: 'Unknown',
+                        documentation_type: 'text',
+                        total_files: 0,
+                        total_size: content.length
+                    },
+                    content: content
+                };
+            case '.csv':
+                // For CSV, parse as rows and columns
+                const lines = content.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                const rows = lines.slice(1).map(line => {
+                    const values = line.split(',');
+                    const row: any = {};
+                    headers.forEach((header, i) => {
+                        row[header] = values[i]?.trim() || '';
+                    });
+                    return row;
+                });
+                return {
+                    project_info: {
+                        path: 'Unknown',
+                        generated_on: 'Unknown',
+                        documentation_type: 'csv',
+                        total_files: rows.length,
+                        total_size: content.length
+                    },
+                    files: rows
+                };
+            default:
+                return {
+                    project_info: {
+                        path: 'Unknown',
+                        generated_on: 'Unknown'
+                    },
+                    content: content
+                };
+        }
+    }
+
+    private generateHtml(data: any, fileExtension: string): string {
+        // Base HTML template
+        let html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Code Cartographer Documentation</title>
+            <style>
+                body {
+                    font-family: var(--vscode-font-family);
+                    background-color: var(--vscode-editor-background);
+                    color: var(--vscode-editor-foreground);
+                    padding: 20px;
+                    line-height: 1.5;
+                }
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+                header {
+                    margin-bottom: 30px;
+                }
+                h1, h2, h3 {
+                    color: var(--vscode-editor-foreground);
+                }
+                .info-box {
+                    background-color: var(--vscode-editor-inactiveSelectionBackground);
+                    border-radius: 4px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                }
+                .info-item {
+                    display: flex;
+                    margin-bottom: 8px;
+                }
+                .info-label {
+                    font-weight: bold;
+                    width: 140px;
+                }
+                .structure-container {
+                    margin: 20px 0;
+                }
+                .file-tree {
+                    margin: 0;
+                    padding: 0;
+                    list-style-type: none;
+                }
+                .file-tree li {
+                    position: relative;
+                    padding-left: 20px;
+                    margin: 5px 0;
+                }
+                .file-tree details {
+                    margin-left: 20px;
+                }
+                .file-tree summary {
+                    cursor: pointer;
+                    padding: 5px 0;
+                }
+                .file-tree summary:hover {
+                    background-color: var(--vscode-list-hoverBackground);
+                }
+                .file {
+                    color: var(--vscode-textLink-foreground);
+                    cursor: pointer;
+                    padding: 5px 0;
+                }
+                .file:hover {
+                    text-decoration: underline;
+                    background-color: var(--vscode-list-hoverBackground);
+                }
+                .directory::before {
+                    content: "📁 ";
+                }
+                .file::before {
+                    content: "📄 ";
+                }
+                .file-contents {
+                    margin-top: 30px;
+                }
+                .file-card {
+                    background-color: var(--vscode-editor-inactiveSelectionBackground);
+                    border-radius: 4px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                }
+                .file-header {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                }
+                .file-path {
+                    font-weight: bold;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .file-size {
+                    font-size: 0.9em;
+                    color: var(--vscode-descriptionForeground);
+                }
+                .file-content {
+                    white-space: pre-wrap;
+                    overflow-x: auto;
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: var(--vscode-editor-font-size);
+                    line-height: 1.5;
+                    background-color: var(--vscode-editor-background);
+                    padding: 10px;
+                    border-radius: 4px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                }
+                th, td {
+                    padding: 8px 12px;
+                    border: 1px solid var(--vscode-panel-border);
+                    text-align: left;
+                }
+                th {
+                    background-color: var(--vscode-editor-inactiveSelectionBackground);
+                    font-weight: bold;
+                }
+                tr:nth-child(even) {
+                    background-color: var(--vscode-list-hoverBackground);
+                }
+                .search-container {
+                    margin-bottom: 20px;
+                }
+                .search-input {
+                    width: 100%;
+                    padding: 8px;
+                    font-size: 16px;
+                    background-color: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 4px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <header>
+                    <h1>Code Cartographer Documentation</h1>
+                </header>`;
+
+        // Project Info Section
+        html += `
+                <section>
+                    <h2>Project Information</h2>
+                    <div class="info-box">`;
+
+        if (data.project_info) {
+            const info = data.project_info;
+            html += `
+                        <div class="info-item">
+                            <div class="info-label">Project Path:</div>
+                            <div>${info.path || 'Unknown'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Generated On:</div>
+                            <div>${info.generated_on || 'Unknown'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Document Type:</div>
+                            <div>${info.documentation_type || 'Unknown'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Files:</div>
+                            <div>${info.total_files || 0}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Size:</div>
+                            <div>${this.formatBytes(info.total_size || 0)}</div>
+                        </div>`;
+        }
+
+        html += `
+                    </div>
+                </section>`;
+
+        // Different content based on file type
+        switch (fileExtension) {
+            case '.json':
+                html += this.generateJsonDocView(data);
+                break;
+            case '.txt':
+                html += this.generateTxtDocView(data);
+                break;
+            case '.csv':
+                html += this.generateCsvDocView(data);
+                break;
+            default:
+                html += `<p>Unsupported file format: ${fileExtension}</p>`;
+        }
+
+        // Add script for interactivity
+        html += `
+                <script>
+                    (function() {
+                        const vscode = acquireVsCodeApi();
+                        
+                        // Handle clicks on file links
+                        document.addEventListener('click', (event) => {
+                            const fileElement = event.target.closest('.file');
+                            if (fileElement && fileElement.dataset.path) {
+                                vscode.postMessage({
+                                    command: 'openFile',
+                                    filePath: fileElement.dataset.path
+                                });
+                            }
+                        });
+                        
+                        // Search functionality
+                        const searchInput = document.getElementById('search-input');
+                        if (searchInput) {
+                            searchInput.addEventListener('input', (e) => {
+                                const searchTerm = e.target.value.toLowerCase();
+                                const fileCards = document.querySelectorAll('.file-card');
+                                
+                                fileCards.forEach(card => {
+                                    const filePath = card.querySelector('.file-path').textContent.toLowerCase();
+                                    const fileContent = card.querySelector('.file-content').textContent.toLowerCase();
+                                    
+                                    if (filePath.includes(searchTerm) || fileContent.includes(searchTerm)) {
+                                        card.style.display = '';
+                                    } else {
+                                        card.style.display = 'none';
+                                    }
+                                });
+                            });
+                        }
+                    })();
+                </script>
+            </div>
+        </body>
+        </html>`;
+
+        return html;
+    }
+
+    private generateJsonDocView(data: any): string {
+        let html = '';
+
+        // File Structure Section
+        if (data.file_structure) {
+            html += `
+                <section>
+                    <h2>File Structure</h2>
+                    <div class="structure-container">
+                        ${this.renderFileTree(data.file_structure)}
+                    </div>
+                </section>`;
+        }
+
+        // File Contents Section
+        if (data.files && data.files.length > 0) {
+            html += `
+                <section class="file-contents">
+                    <h2>File Contents</h2>
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" placeholder="Search in files...">
+                    </div>`;
+
+            data.files.forEach((file: any) => {
+                html += `
+                    <div class="file-card">
+                        <div class="file-header">
+                            <div class="file-path">${file.path}</div>
+                            <div class="file-size">${this.formatBytes(file.size)}</div>
+                        </div>
+                        <div class="file-content">${this.escapeHtml(file.content)}</div>
+                    </div>`;
+            });
+
+            html += `
+                </section>`;
+        }
+
+        return html;
+    }
+
+    private generateTxtDocView(data: any): string {
+        return `
+            <section>
+                <h2>Content</h2>
+                <div class="file-card">
+                    <div class="file-content">${this.escapeHtml(data.content)}</div>
+                </div>
+            </section>`;
+    }
+
+    private generateCsvDocView(data: any): string {
+        let html = `
+            <section>
+                <h2>CSV Data</h2>`;
+
+        if (data.files && data.files.length > 0) {
+            const firstRow = data.files[0];
+            const headers = Object.keys(firstRow);
+
+            html += `
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search in data...">
+                </div>
+                <table>
+                    <thead>
+                        <tr>`;
+
+            headers.forEach((header: string) => {
+                html += `<th>${header}</th>`;
+            });
+
+            html += `
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            data.files.forEach((row: any) => {
+                html += `<tr class="file-card">`;
+                headers.forEach((header: string) => {
+                    html += `<td>${this.escapeHtml(row[header])}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>`;
+        } else {
+            html += `<p>No data found in CSV file.</p>`;
+        }
+
+        html += `
+            </section>`;
+
+        return html;
+    }
+
+    private renderFileTree(node: any): string {
+        if (!node) { return ''; }
+
+        if (node.type === 'file') {
+            const filePath = node.path || node.name;
+            return `<li><div class="file" data-path="${filePath}">${node.name}</div></li>`;
+        } else if (node.type === 'directory') {
+            let html = `<li>
+                    <details open>
+                        <summary class="directory">${node.name}</summary>
+                        <ul class="file-tree">`;
+
+            if (node.children && node.children.length > 0) {
+                node.children.forEach((child: any) => {
+                    html += this.renderFileTree(child);
+                });
+            }
+
+            html += `
+                        </ul>
+                    </details>
+                </li>`;
+
+            return html;
+        }
+
+        return '';
+    }
+
+    private formatBytes(bytes: number): string {
+        if (bytes === 0) { return '0 Bytes'; }
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    private escapeHtml(unsafe: string): string {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+}
+
+
+## File: src\extension.ts
+Size: 12.17 KB
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { CodeCartographer } from './codeCartographer';
+import { DocumentationTreeProvider } from './treeView';
+import { DocumentationViewer } from './documentationViewer';
+import { ConfigUiProvider } from './configUi';
+import { getLogger, LogLevel } from './logger';
+
+export function activate(context: vscode.ExtensionContext) {
+	// Initialize logger
+	const logger = getLogger();
+
+	// Check if in debug mode
+	const isDebugMode = process.env.VSCODE_DEBUG_MODE === 'true';
+	if (isDebugMode) {
+		logger.setLogLevel(LogLevel.DEBUG);
+		logger.enableFileLogging();
+	} else {
+		logger.setLogLevel(LogLevel.INFO);
+	}
+
+	logger.info('Activating Code Cartographer extension');
+
+	// Register tree view
+	const treeDataProvider = new DocumentationTreeProvider();
+	vscode.window.registerTreeDataProvider('codeCartographerExplorer', treeDataProvider);
+
+	// Create documentation viewer
+	const documentationViewer = new DocumentationViewer(context);
+
+	// Store the tree provider instance in context for access from other parts
+	context.subscriptions.push({ dispose: () => { } });
+
+	// Register the configuration command
+	let configCommand = vscode.commands.registerCommand(
+		'code-cartographer.configure',
+		async () => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage('No workspace folder open');
+				return;
+			}
+
+			// Select workspace folder if multiple
+			let folderUri: vscode.Uri;
+			if (workspaceFolders.length === 1) {
+				folderUri = workspaceFolders[0].uri;
+			} else {
+				const selected = await vscode.window.showQuickPick(
+					workspaceFolders.map(folder => ({
+						label: folder.name,
+						description: folder.uri.fsPath,
+						folderUri: folder.uri
+					})),
+					{ placeHolder: 'Select workspace folder to configure' }
+				);
+				if (!selected) { return; }
+				folderUri = selected.folderUri;
+			}
+
+			// Open configuration UI
+			const configUi = new ConfigUiProvider(context, folderUri.fsPath);
+			configUi.show();
+		}
+	);
+
+	// Register the main command
+	let generateCommand = vscode.commands.registerCommand(
+		'code-cartographer.generate',
+		async () => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage('No workspace folder open');
+				return;
+			}
+
+			// Get configuration options
+			const config = vscode.workspace.getConfiguration('codeCartographer');
+			const outputFormat = config.get('outputFormat', 'json');
+			const docType = config.get('documentationType', 'both');
+
+			// Select workspace folder if multiple
+			let folderUri: vscode.Uri;
+			if (workspaceFolders.length === 1) {
+				folderUri = workspaceFolders[0].uri;
+			} else {
+				const selected = await vscode.window.showQuickPick(
+					workspaceFolders.map(folder => ({
+						label: folder.name,
+						description: folder.uri.fsPath,
+						folderUri: folder.uri
+					})),
+					{ placeHolder: 'Select workspace folder to document' }
+				);
+				if (!selected) { return; }
+				folderUri = selected.folderUri;
+			}
+
+			// Initialize enhanced cartographer
+			const cartographer = new CodeCartographer(folderUri.fsPath);
+
+			// Determine if cartographer.config.json exists
+			const configFileOptions = [
+				path.join(folderUri.fsPath, 'cartographer.config.json'),
+				path.join(folderUri.fsPath, '.cartographer.json'),
+				path.join(folderUri.fsPath, '.vscode', 'cartographer.json')
+			];
+
+			let configExists = false;
+			for (const configPath of configFileOptions) {
+				try {
+					const fileExists = await vscode.workspace.fs.stat(vscode.Uri.file(configPath));
+					if (fileExists) {
+						configExists = true;
+						break;
+					}
+				} catch (error) {
+					// File doesn't exist, continue checking
+				}
+			}
+
+			// If no config exists, offer to create one
+			if (!configExists) {
+				const createConfig = await vscode.window.showInformationMessage(
+					'No Code Cartographer configuration found. Would you like to create one?',
+					'Create Config',
+					'Continue Without Config'
+				);
+
+				if (createConfig === 'Create Config') {
+					const configUi = new ConfigUiProvider(context, folderUri.fsPath);
+					configUi.show();
+					return;
+				}
+			}
+
+			// Select output location
+			const defaultFileName = `documentation.${outputFormat}`;
+			const defaultUri = vscode.Uri.file(path.join(folderUri.fsPath, defaultFileName));
+			const outputUri = await vscode.window.showSaveDialog({
+				defaultUri,
+				filters: {
+					'JSON': ['json'],
+					'Text': ['txt'],
+					'CSV': ['csv'],
+					'All Files': ['*']
+				},
+				title: 'Save Documentation'
+			});
+
+			if (!outputUri) { return; }
+
+			// Create progress indicator
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: 'Generating documentation',
+				cancellable: true
+			}, async (progress, token) => {
+				progress.report({ message: 'Scanning files...' });
+
+				try {
+					// Generate documentation with enhanced features
+					await cartographer.document({
+						outputPath: outputUri.fsPath,
+						outputFormat,
+						documentationType: docType,
+						onProgress: (message: string, percent: number) => {
+							progress.report({ message, increment: percent });
+						},
+						debugMode: isDebugMode
+					});
+
+					// Refresh the tree view
+					treeDataProvider.refresh(outputUri.fsPath);
+
+					// Show success message
+					vscode.window.showInformationMessage(
+						`Documentation generated at ${path.basename(outputUri.fsPath)}`,
+						'View Documentation',
+						'Show Logs'
+					).then(selection => {
+						if (selection === 'View Documentation') {
+							// Use the custom viewer instead of just opening the file
+							documentationViewer.showDocumentation(outputUri.fsPath);
+						} else if (selection === 'Show Logs') {
+							logger.show();
+						}
+					});
+				} catch (err) {
+					logger.error(`Error generating documentation: ${err}`);
+					vscode.window.showErrorMessage(
+						`Error generating documentation: ${err}`,
+						'Show Logs'
+					).then(selection => {
+						if (selection === 'Show Logs') {
+							logger.show();
+						}
+					});
+				}
+			});
+		}
+	);
+
+	// Register quick analysis command
+	let analyzeCommand = vscode.commands.registerCommand(
+		'code-cartographer.analyze',
+		async () => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage('No workspace folder open');
+				return;
+			}
+
+			// Select workspace folder if multiple
+			let folderUri: vscode.Uri;
+			if (workspaceFolders.length === 1) {
+				folderUri = workspaceFolders[0].uri;
+			} else {
+				const selected = await vscode.window.showQuickPick(
+					workspaceFolders.map(folder => ({
+						label: folder.name,
+						description: folder.uri.fsPath,
+						folderUri: folder.uri
+					})),
+					{ placeHolder: 'Select workspace folder to analyze' }
+				);
+				if (!selected) { return; }
+				folderUri = selected.folderUri;
+			}
+
+			// Run quick analysis
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: 'Analyzing project structure',
+				cancellable: false
+			}, async (progress) => {
+				try {
+					progress.report({ message: 'Scanning files...' });
+					const stats = await CodeCartographer.quickAnalyze(folderUri.fsPath);
+
+					// Show results
+					const outputChannel = vscode.window.createOutputChannel('Code Cartographer Analysis');
+					outputChannel.clear();
+					outputChannel.appendLine('# Code Cartographer - Project Analysis');
+					outputChannel.appendLine('');
+					outputChannel.appendLine(`Project: ${folderUri.fsPath}`);
+					outputChannel.appendLine(`Total Files: ${stats.total_files}`);
+					outputChannel.appendLine('');
+
+					outputChannel.appendLine('## File Types:');
+					for (const [ext, count] of Object.entries(stats.file_types)) {
+						outputChannel.appendLine(`${ext || 'No extension'}: ${count} files`);
+					}
+
+					outputChannel.appendLine('');
+					outputChannel.appendLine('## Directories:');
+					for (const [dir, count] of Object.entries(stats.directories)) {
+						outputChannel.appendLine(`${dir}: ${count} files`);
+					}
+
+					outputChannel.show();
+
+					vscode.window.showInformationMessage(
+						'Project analysis complete',
+						'Generate Full Documentation'
+					).then(selection => {
+						if (selection === 'Generate Full Documentation') {
+							vscode.commands.executeCommand('code-cartographer.generate');
+						}
+					});
+				} catch (err) {
+					logger.error(`Error analyzing project: ${err}`);
+					vscode.window.showErrorMessage(`Error analyzing project: ${err}`);
+				}
+			});
+		}
+	);
+
+	// Register view command
+	let viewCommand = vscode.commands.registerCommand(
+		'code-cartographer.view',
+		async (docPath) => {
+			logger.debug('View command called with path:', docPath);
+
+			// When called from command palette without args
+			if (!docPath) {
+				// Try to find all documentation files and let user pick one
+				// Get the instance that was already created during activation
+				const treeProvider = DocumentationTreeProvider.getInstance();
+				const docFiles = await treeProvider.getAllDocumentationFiles();
+
+				if (docFiles.length === 0) {
+					vscode.window.showInformationMessage('No documentation files found. Generate documentation first.');
+					return;
+				}
+
+				const selected = await vscode.window.showQuickPick(
+					docFiles.map(file => ({
+						label: path.basename(file),
+						description: path.dirname(file),
+						filePath: file
+					})),
+					{ placeHolder: 'Select documentation file to open' }
+				);
+
+				if (!selected) { return; }
+				docPath = selected.filePath;
+			} else if (typeof docPath !== 'string') {
+				// Try to handle the case where we receive a DocumentationItem object instead
+				if (docPath && typeof docPath === 'object' && docPath.filePath) {
+					docPath = docPath.filePath;
+				} else {
+					vscode.window.showErrorMessage('Failed to open documentation: Invalid path');
+					return;
+				}
+			}
+
+			try {
+				// Open in webview instead of raw editor
+				await documentationViewer.showDocumentation(docPath);
+			} catch (error) {
+				logger.error('Error opening documentation viewer:', error);
+				vscode.window.showErrorMessage(`Failed to open documentation: ${error}`);
+
+				// Fallback to opening in editor if webview fails
+				try {
+					const uri = vscode.Uri.file(docPath);
+					await vscode.commands.executeCommand('vscode.open', uri);
+				} catch (fallbackError) {
+					logger.error('Error in fallback file opening:', fallbackError);
+				}
+			}
+		}
+	);
+
+	// Register show logs command
+	let showLogsCommand = vscode.commands.registerCommand(
+		'code-cartographer.showLogs',
+		() => {
+			logger.show();
+		}
+	);
+
+	context.subscriptions.push(
+		generateCommand,
+		viewCommand,
+		configCommand,
+		analyzeCommand,
+		showLogsCommand
+	);
+
+	// Register command to create config file
+	let createConfigCommand = vscode.commands.registerCommand(
+		'code-cartographer.createConfig',
+		async () => {
+			const workspaceFolders = vscode.workspace.workspaceFolders;
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage('No workspace folder open');
+				return;
+			}
+
+			// Select workspace folder if multiple
+			let folderUri: vscode.Uri;
+			if (workspaceFolders.length === 1) {
+				folderUri = workspaceFolders[0].uri;
+			} else {
+				const selected = await vscode.window.showQuickPick(
+					workspaceFolders.map(folder => ({
+						label: folder.name,
+						description: folder.uri.fsPath,
+						folderUri: folder.uri
+					})),
+					{ placeHolder: 'Select workspace folder to document' }
+				);
+				if (!selected) { return; }
+				folderUri = selected.folderUri;
+			}
+
+			try {
+				// Generate config file
+				const configPath = await CodeCartographer.createInitialConfig(folderUri.fsPath);
+				vscode.window.showInformationMessage(
+					`Created configuration file at ${path.basename(configPath)}`,
+					'Open File'
+				).then(selection => {
+					if (selection === 'Open File') {
+						vscode.commands.executeCommand('vscode.open', vscode.Uri.file(configPath));
+					}
+				});
+			} catch (error) {
+				logger.error('Error creating config file:', error);
+				vscode.window.showErrorMessage(`Failed to create config file: ${error}`);
+			}
+		}
+	);
+
+	context.subscriptions.push(createConfigCommand);
+
+	logger.info('Code Cartographer extension activated successfully');
+}
+
+export function deactivate() {
+	getLogger().info('Code Cartographer extension deactivated');
+}
+
+
+## File: src\fileProcessor.ts
+Size: 8.90 KB
+================================================================================
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { TextDecoder } from 'util';
+import { promisify } from 'util';
+import { getLogger } from './logger';
+
+const readFileAsync = promisify(fs.readFile);
+const statAsync = promisify(fs.stat);
+
+export interface FileProcessingOptions {
+    maxSize: number;
+    skipBinary: boolean;
+    skipGenerated: boolean;
+    onProgress?: (filePath: string, bytesRead: number) => void;
+}
+
+export class FileProcessor {
+    private static readonly BINARY_CHECK_SIZE = 8192; // Check first 8KB for binary detection
+    private static readonly DEFAULT_ENCODING_ATTEMPTS = ['utf8', 'latin1', 'utf16le', 'ascii'];
+    private static readonly GENERATED_FILE_MARKERS = [
+        "// Generated code",
+        "/* Generated code",
+        "@generated",
+        "// GENERATED CODE - DO NOT MODIFY",
+        "# Generated by",
+        "// Auto-generated",
+        "# This is a generated file",
+        "DO NOT EDIT",
+        "/* eslint-disable */", // Often used in generated files
+        "// ------------------" // Common in generated separator
+    ];
+
+    private logger = getLogger();
+
+    constructor() { }
+
+    /**
+     * Process a file and extract its content with proper encoding detection
+     */
+    public async processFile(filePath: string, options: FileProcessingOptions): Promise<{ content: string; size: number } | null> {
+        try {
+            this.logger.debug(`Processing file: ${filePath}`);
+
+            // Check file exists
+            if (!fs.existsSync(filePath)) {
+                this.logger.warn(`File does not exist: ${filePath}`);
+                return null;
+            }
+
+            // Check file stats
+            const stats = await statAsync(filePath);
+
+            // Skip if not a regular file
+            if (!stats.isFile()) {
+                this.logger.debug(`Not a regular file: ${filePath}`);
+                return null;
+            }
+
+            // Check file size
+            if (stats.size > options.maxSize) {
+                this.logger.info(`Skipping large file (${stats.size} bytes): ${filePath}`);
+                return null;
+            }
+
+            // Read file as buffer
+            const buffer = await readFileAsync(filePath);
+
+            // Skip binary files if specified
+            if (options.skipBinary && this.isBinaryFile(buffer)) {
+                this.logger.info(`Skipping binary file: ${filePath}`);
+                return null;
+            }
+
+            // Try to decode the content
+            const content = await this.decodeFileContent(buffer, filePath);
+            if (!content) {
+                this.logger.warn(`Could not decode file content: ${filePath}`);
+                return null;
+            }
+
+            // Skip generated files if specified
+            if (options.skipGenerated && this.isGeneratedFile(content)) {
+                this.logger.info(`Skipping generated file: ${filePath}`);
+                return null;
+            }
+
+            // Call progress callback if provided
+            if (options.onProgress) {
+                options.onProgress(filePath, stats.size);
+            }
+
+            return { content, size: stats.size };
+        } catch (error) {
+            this.logger.error(`Error processing file ${filePath}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Check if a file is likely a binary file
+     */
+    private isBinaryFile(buffer: Buffer): boolean {
+        // Strategy: Check for null bytes and unusual character distributions
+
+        const checkSize = Math.min(buffer.length, FileProcessor.BINARY_CHECK_SIZE);
+
+        // Check for null bytes (common in binary files)
+        for (let i = 0; i < checkSize; i++) {
+            if (buffer[i] === 0) {
+                return true;
+            }
+        }
+
+        // Count control characters (besides common whitespace)
+        // High percentage of control chars suggests binary
+        let controlCharCount = 0;
+        for (let i = 0; i < checkSize; i++) {
+            const byte = buffer[i];
+            // Skip common whitespace ASCII: 9 (tab), 10 (LF), 13 (CR)
+            if ((byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) || byte === 127) {
+                controlCharCount++;
+            }
+        }
+
+        // If more than 10% of the checked content is control characters, likely binary
+        if (controlCharCount > checkSize * 0.1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Try multiple encodings to decode file content
+     */
+    private async decodeFileContent(buffer: Buffer, filePath: string): Promise<string | null> {
+        // Try to detect encoding from file content
+        let encodingsToTry = [...FileProcessor.DEFAULT_ENCODING_ATTEMPTS];
+
+        // Adjust encoding priority based on file extension
+        const ext = path.extname(filePath).toLowerCase();
+        if (['.js', '.ts', '.json', '.html', '.css', '.md'].includes(ext)) {
+            // These are almost certainly UTF-8
+            encodingsToTry = ['utf8', ...encodingsToTry.filter(e => e !== 'utf8')];
+        }
+
+        // Try each encoding
+        for (const encoding of encodingsToTry) {
+            try {
+                const decoder = new TextDecoder(encoding);
+                const content = decoder.decode(buffer);
+
+                // Validate that encoding worked (look for replacement chars)
+                if (!content.includes('�')) {
+                    this.logger.debug(`Successfully decoded ${filePath} with ${encoding} encoding`);
+                    return content;
+                }
+            } catch (err) {
+                this.logger.debug(`Failed to decode ${filePath} with ${encoding} encoding`);
+                continue;
+            }
+        }
+
+        // If we've tried all encodings and none worked well, use UTF-8 as last resort
+        try {
+            const content = buffer.toString('utf8');
+            this.logger.warn(`Used fallback UTF-8 encoding for ${filePath} (may have encoding issues)`);
+            return content;
+        } catch (err) {
+            this.logger.error(`All encoding attempts failed for ${filePath}`);
+            return null;
+        }
+    }
+
+    /**
+     * Check if a file is likely generated code
+     */
+    private isGeneratedFile(content: string): boolean {
+        // Look for generated code markers in first few lines
+        const firstFewLines = content.split('\n').slice(0, 10).join('\n').toLowerCase();
+
+        return FileProcessor.GENERATED_FILE_MARKERS.some(marker =>
+            firstFewLines.includes(marker.toLowerCase())
+        );
+    }
+
+    /**
+     * Extract file metadata without full content
+     */
+    public async getFileMetadata(filePath: string): Promise<{ path: string; size: number; type: string } | null> {
+        try {
+            if (!fs.existsSync(filePath)) {
+                return null;
+            }
+
+            const stats = await statAsync(filePath);
+            if (!stats.isFile()) {
+                return null;
+            }
+
+            return {
+                path: filePath,
+                size: stats.size,
+                type: this.detectFileType(filePath)
+            };
+        } catch (error) {
+            this.logger.error(`Error getting file metadata for ${filePath}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Detect file type based on extension
+     */
+    private detectFileType(filePath: string): string {
+        const ext = path.extname(filePath).toLowerCase();
+
+        // Common file type mapping
+        const fileTypeMap: Record<string, string> = {
+            '.js': 'JavaScript',
+            '.ts': 'TypeScript',
+            '.jsx': 'React JSX',
+            '.tsx': 'React TSX',
+            '.html': 'HTML',
+            '.css': 'CSS',
+            '.scss': 'SCSS',
+            '.sass': 'Sass',
+            '.less': 'Less',
+            '.json': 'JSON',
+            '.md': 'Markdown',
+            '.py': 'Python',
+            '.java': 'Java',
+            '.rb': 'Ruby',
+            '.php': 'PHP',
+            '.c': 'C',
+            '.cpp': 'C++',
+            '.h': 'C/C++ Header',
+            '.cs': 'C#',
+            '.go': 'Go',
+            '.rs': 'Rust',
+            '.swift': 'Swift',
+            '.kt': 'Kotlin',
+            '.sh': 'Shell Script',
+            '.bat': 'Batch Script',
+            '.ps1': 'PowerShell',
+            '.xml': 'XML',
+            '.yaml': 'YAML',
+            '.yml': 'YAML',
+            '.toml': 'TOML',
+            '.sql': 'SQL',
+            '.graphql': 'GraphQL',
+            '.txt': 'Text',
+            '.csv': 'CSV',
+            '.svg': 'SVG',
+            '.png': 'PNG Image',
+            '.jpg': 'JPEG Image',
+            '.jpeg': 'JPEG Image',
+            '.gif': 'GIF Image',
+            '.pdf': 'PDF Document'
+        };
+
+        return fileTypeMap[ext] || 'Unknown';
+    }
+}
+
+
+## File: src\gitignoreParser.ts
+Size: 1.00 KB
+================================================================================
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as micromatch from 'micromatch';
+
+export function parseGitignore(gitignorePath: string): (filePath: string) => boolean {
+    if (!fs.existsSync(gitignorePath)) {
+        return () => false;
+    }
+
+    try {
+        const content = fs.readFileSync(gitignorePath, 'utf8');
+        const rules = content
+            .split('\n')
+            .filter(line => line.trim() && !line.startsWith('#'))
+            .map(line => line.trim());
+
+        const basePath = path.dirname(gitignorePath);
+
+        return (filePath: string) => {
+            // Make path relative to gitignore directory
+            const relativePath = path.relative(basePath, filePath).replace(/\\/g, '/');
+
+            // Check if path matches any gitignore pattern
+            return micromatch.isMatch(relativePath, rules, { dot: true });
+        };
+    } catch (err) {
+        console.error(`Error parsing gitignore: ${err}`);
+        return () => false;
+    }
+}
+
+
+## File: src\logger.ts
+Size: 4.46 KB
+================================================================================
+
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+
+export enum LogLevel {
+    TRACE = 0,
+    DEBUG = 1,
+    INFO = 2,
+    WARN = 3,
+    ERROR = 4,
+    NONE = 5
+}
+
+export class Logger {
+    private static instance: Logger;
+    private outputChannel: vscode.OutputChannel;
+    private logFilePath?: string;
+    private logLevel: LogLevel = LogLevel.INFO;
+    private logToFile: boolean = false;
+
+    private constructor() {
+        this.outputChannel = vscode.window.createOutputChannel('Code Cartographer');
+    }
+
+    public static getInstance(): Logger {
+        if (!Logger.instance) {
+            Logger.instance = new Logger();
+        }
+        return Logger.instance;
+    }
+
+    public setLogLevel(level: LogLevel): void {
+        this.logLevel = level;
+        this.info(`Log level set to ${LogLevel[level]}`);
+    }
+
+    public enableFileLogging(directory?: string): void {
+        try {
+            const timestamp = new Date().toISOString().replace(/:/g, '-');
+            const logDir = directory || path.join(os.tmpdir(), 'code-cartographer-logs');
+
+            if (!fs.existsSync(logDir)) {
+                fs.mkdirSync(logDir, { recursive: true });
+            }
+
+            this.logFilePath = path.join(logDir, `cartographer-${timestamp}.log`);
+            this.logToFile = true;
+
+            this.info(`File logging enabled at: ${this.logFilePath}`);
+        } catch (error) {
+            this.error(`Failed to set up file logging: ${error}`);
+            this.logToFile = false;
+        }
+    }
+
+    public disableFileLogging(): void {
+        this.logToFile = false;
+        this.info('File logging disabled');
+    }
+
+    public trace(message: string, data?: any): void {
+        this.log(LogLevel.TRACE, message, data);
+    }
+
+    public debug(message: string, data?: any): void {
+        this.log(LogLevel.DEBUG, message, data);
+    }
+
+    public info(message: string, data?: any): void {
+        this.log(LogLevel.INFO, message, data);
+    }
+
+    public warn(message: string, data?: any): void {
+        this.log(LogLevel.WARN, message, data);
+    }
+
+    public error(message: string, error?: any): void {
+        this.log(LogLevel.ERROR, message, error);
+
+        // For errors, also show notification if it's serious
+        if (this.logLevel <= LogLevel.ERROR) {
+            vscode.window.showErrorMessage(`Code Cartographer: ${message}`);
+        }
+    }
+
+    private log(level: LogLevel, message: string, data?: any): void {
+        if (level < this.logLevel) {
+            return;
+        }
+
+        const timestamp = new Date().toISOString();
+        const levelName = LogLevel[level].padEnd(5);
+        let logMessage = `[${timestamp}] [${levelName}] ${message}`;
+
+        // Add formatted data if provided
+        if (data !== undefined) {
+            if (data instanceof Error) {
+                logMessage += `\nError: ${data.message}\nStack: ${data.stack}`;
+            } else if (typeof data === 'object') {
+                try {
+                    logMessage += `\nData: ${JSON.stringify(data, null, 2)}`;
+                } catch (e) {
+                    logMessage += `\nData: [Object could not be stringified]`;
+                }
+            } else {
+                logMessage += `\nData: ${data}`;
+            }
+        }
+
+        // Write to VS Code output channel
+        this.outputChannel.appendLine(logMessage);
+
+        // Write to file if enabled
+        if (this.logToFile && this.logFilePath) {
+            try {
+                fs.appendFileSync(this.logFilePath, logMessage + '\n');
+            } catch (error) {
+                // Write to output channel only to avoid infinite recursion
+                this.outputChannel.appendLine(`[${timestamp}] [ERROR] Failed to write to log file: ${error}`);
+                this.logToFile = false;
+            }
+        }
+
+        // Also log to console for development
+        if (level >= LogLevel.WARN) {
+            console.warn(logMessage);
+        } else if (level === LogLevel.INFO) {
+            console.info(logMessage);
+        } else {
+            console.log(logMessage);
+        }
+    }
+
+    public show(): void {
+        this.outputChannel.show();
+    }
+
+    public dispose(): void {
+        this.outputChannel.dispose();
+    }
+}
+
+// Helper function to get logger instance
+export function getLogger(): Logger {
+    return Logger.getInstance();
+}
+
+
+## File: src\treeView.ts
+Size: 4.76 KB
+================================================================================
+
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+
+export class DocumentationTreeProvider implements vscode.TreeDataProvider<DocumentationItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<DocumentationItem | undefined | null | void> = new vscode.EventEmitter<DocumentationItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<DocumentationItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    private documentationFiles: string[] = [];
+    private static instance: DocumentationTreeProvider;
+
+    constructor() {
+        // Use singleton pattern to access the instance from commands
+        DocumentationTreeProvider.instance = this;
+    }
+
+    static getInstance(): DocumentationTreeProvider {
+        return DocumentationTreeProvider.instance;
+    }
+
+    refresh(docPath?: string): void {
+        if (docPath && !this.documentationFiles.includes(docPath)) {
+            this.documentationFiles.push(docPath);
+        }
+        this._onDidChangeTreeData.fire();
+    }
+
+    // Method to get all documentation files
+    async getAllDocumentationFiles(): Promise<string[]> {
+        // First check our stored files
+        let files = this.documentationFiles.filter(file => fs.existsSync(file));
+
+        // If no files found, try to find documentation files in current workspace
+        if (files.length === 0) {
+            files = await this.findDocumentationFilesInWorkspace();
+            // Add them to our list
+            for (const file of files) {
+                if (!this.documentationFiles.includes(file)) {
+                    this.documentationFiles.push(file);
+                }
+            }
+        }
+
+        return files;
+    }
+
+    // Helper method to find documentation files in workspace
+    private async findDocumentationFilesInWorkspace(): Promise<string[]> {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            return [];
+        }
+
+        const files: string[] = [];
+
+        // Search for files with common documentation names
+        const filePatterns = [
+            '**/documentation.json',
+            '**/documentation.txt',
+            '**/documentation.csv',
+            '**/docs/*.json',
+            '**/docs/*.txt',
+            '**/docs/*.csv'
+        ];
+
+        // Search for each pattern in the workspace
+        for (const pattern of filePatterns) {
+            const foundFiles = await vscode.workspace.findFiles(pattern, '**/node_modules/**');
+            for (const file of foundFiles) {
+                files.push(file.fsPath);
+            }
+        }
+
+        return files;
+    }
+
+    getTreeItem(element: DocumentationItem): vscode.TreeItem {
+        return element;
+    }
+
+    getChildren(element?: DocumentationItem): Thenable<DocumentationItem[]> {
+        if (!element) {
+            // Root: Show all doc files
+            return Promise.resolve(
+                this.documentationFiles
+                    .filter(file => fs.existsSync(file)) // Make sure file exists
+                    .map(file => {
+                        const basename = path.basename(file);
+                        return new DocumentationItem(
+                            basename,
+                            file,
+                            vscode.TreeItemCollapsibleState.None,
+                            {
+                                command: 'code-cartographer.view',
+                                title: 'View Documentation',
+                                arguments: [file] // Pass the file path as a string
+                            }
+                        );
+                    })
+            );
+        }
+
+        // No children for doc files
+        return Promise.resolve([]);
+    }
+}
+
+export class DocumentationItem extends vscode.TreeItem {
+    constructor(
+        public readonly label: string,
+        public readonly filePath: string,
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        public readonly command?: vscode.Command
+    ) {
+        super(label, collapsibleState);
+
+        const ext = path.extname(filePath).toLowerCase();
+
+        this.tooltip = filePath;
+        this.description = path.dirname(filePath);
+        this.contextValue = 'documentationItem';
+
+        // Set icon based on file type
+        if (ext === '.json') {
+            this.iconPath = new vscode.ThemeIcon('json');
+        } else if (ext === '.txt') {
+            this.iconPath = new vscode.ThemeIcon('file-text');
+        } else if (ext === '.csv') {
+            this.iconPath = new vscode.ThemeIcon('list-tree');
+        } else {
+            this.iconPath = new vscode.ThemeIcon('file');
+        }
+    }
+}
+
+
+## File: src\test\extension.test.ts
+Size: 0.45 KB
+================================================================================
+
+import * as assert from 'assert';
+
+// You can import and use all API from the 'vscode' module
+// as well as import your extension to test it
+import * as vscode from 'vscode';
+// import * as myExtension from '../../extension';
+
+suite('Extension Test Suite', () => {
+	vscode.window.showInformationMessage('Start all tests.');
+
+	test('Sample test', () => {
+		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
+		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+	});
+});
+
+
+
+## File: tsconfig.json
+Size: 0.50 KB
+================================================================================
+
+{
+	"compilerOptions": {
+		"module": "Node16",
+		"target": "ES2022",
+		"lib": [
+			"ES2022"
+		],
+		"sourceMap": true,
+		"rootDir": "src",
+		"strict": true,   /* enable all strict type-checking options */
+		/* Additional Checks */
+		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
+		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
+	}
+}
+
+
