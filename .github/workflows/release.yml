@@ -1,0 +1,58 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*' # This will trigger the workflow on version tags (v0.1.0, v0.2.0, etc.)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build extension
+        run: npm run package
+        
+      - name: Package VSIX
+        run: |
+          npm install -g @vscode/vsce
+          vsce package
+          echo "VSIX_PATH=$(ls *.vsix)" >> $GITHUB_ENV
+          echo "VSIX_NAME=$(ls *.vsix | head -n 1)" >> $GITHUB_ENV
+          
+      - name: Extract version from package.json
+        id: extract_version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.VSIX_PATH }}
+          name: Release v${{ steps.extract_version.outputs.VERSION }}
+          body: |
+            Code Cartographer v${{ steps.extract_version.outputs.VERSION }}
+            
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Upload to Visual Studio Marketplace
+        if: success() && contains(github.ref, 'refs/tags/')
+        run: |
+          # You can uncomment and use this once you've set up the secrets
+          # vsce publish -p ${{ secrets.VSCE_PAT }}
+          echo "Skipping VS Marketplace publication. Uncomment the vsce publish line when ready."

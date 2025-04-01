@@ -14,3 +14,4 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 images/logo.svg
 scripts/**
+.env
