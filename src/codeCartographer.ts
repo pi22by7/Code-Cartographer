@@ -59,7 +59,7 @@ export class CodeCartographer {
             startTime: new Date()
         };
 
-        this.logger.info(`EnhancedCodeCartographer initialized for: ${rootDir}`);
+        this.logger.info(`CodeCartographer initialized for: ${rootDir}`);
     }
 
     /**

@@ -2,6 +2,17 @@
 
 All notable changes to the "Code Cartographer" extension will be documented in this file.
 
+## [0.4.1] - 2025-04-01
+
+### Fixed
+- Fixed issue where cartographer.config.json settings were being ignored when VS Code settings were present
+- Ensured file-based configuration takes precedence over workspace settings
+- Resolved conflict between output formats specified in config file vs VS Code settings
+
+### Added
+- CI/CD pipeline for automated releases to GitHub
+- Better error handling for configuration file parsing
+
 ## [0.4.0] - 2025-04-01
 
 ### Added

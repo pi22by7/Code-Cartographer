@@ -163,8 +163,8 @@ export function activate(context: vscode.ExtensionContext) {
 					// Generate documentation with enhanced features
 					await cartographer.document({
 						outputPath: outputUri.fsPath,
-						outputFormat,
-						documentationType: docType,
+						// outputFormat,
+						// documentationType: docType,
 						onProgress: (message: string, percent: number) => {
 							progress.report({ message, increment: percent });
 						},
