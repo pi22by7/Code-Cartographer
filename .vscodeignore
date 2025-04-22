@@ -15,3 +15,6 @@ vsc-extension-quickstart.md
 images/logo.svg
 scripts/**
 .env
+.github/**
+cartographer.config.json
+documentation.json

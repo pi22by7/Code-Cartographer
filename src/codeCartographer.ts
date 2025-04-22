@@ -22,6 +22,7 @@ export interface DocumentationStats {
     startTime: Date;
     endTime?: Date;
     duration?: number;
+    totalTokenCount?: number;
 }
 
 export interface DocumentOptions {
@@ -56,7 +57,8 @@ export class CodeCartographer {
             largestFile: { path: '', size: 0 },
             averageFileSize: 0,
             fileTypes: {},
-            startTime: new Date()
+            startTime: new Date(),
+            totalTokenCount: 0 // Initialize token count
         };
 
         this.logger.info(`CodeCartographer initialized for: ${rootDir}`);
@@ -131,6 +133,12 @@ export class CodeCartographer {
             if (result) {
                 this.stats.totalDocumentedFiles++;
                 this.stats.documentedSize += result.size;
+
+                // Calculate and track token count
+                if (result.content) {
+                    const tokenCount = this.calculateTokenCount(result.content);
+                    this.stats.totalTokenCount = (this.stats.totalTokenCount || 0) + tokenCount;
+                }
 
                 return {
                     path: path.relative(this.rootDir, filePath),
@@ -252,6 +260,17 @@ export class CodeCartographer {
     }
 
     /**
+     * Calculate approximate token count from text content
+     * This is a rough approximation using character count divided by 4
+     * which is close to GPT tokenizer average for English text
+     */
+    private calculateTokenCount(content: string): number {
+        // Simple approximation: ~4 characters per token for English text
+        return Math.ceil(content.length / 4);
+    }
+
+
+    /**
      * Get all files recursively from a directory
      */
     private async getAllFiles(dir: string): Promise<string[]> {
@@ -300,6 +319,7 @@ export class CodeCartographer {
         output += `Documented Files: ${data.project_info.documented_files}\n`;
         output += `Total Size: ${this.formatBytes(data.project_info.total_size)}\n`;
         output += `Generation Time: ${(data.project_info.generation_time_ms / 1000).toFixed(2)} seconds\n`;
+        output += `Total Token Count: ${data.project_info.total_token_count.toLocaleString()}\n`;
         output += `${'='.repeat(80)}\n\n`;
 
         if (data.file_structure) {
@@ -374,6 +394,7 @@ export class CodeCartographer {
         output += `documented_files,${data.project_info.documented_files}\n`;
         output += `total_size,${data.project_info.total_size}\n`;
         output += `generation_time_ms,${data.project_info.generation_time_ms}\n\n`;
+        output += `total_token_count,${data.project_info.total_token_count}\n\n`;
 
         // Add structure if available
         if (data.file_structure) {
@@ -571,14 +592,16 @@ export class CodeCartographer {
                 documented_files: this.stats.totalDocumentedFiles,
                 total_size: this.stats.totalSize,
                 documented_size: this.stats.documentedSize,
-                generation_time_ms: this.stats.duration
+                generation_time_ms: this.stats.duration,
+                total_token_count: this.stats.totalTokenCount || 0
             },
             file_structure: fileStructure,
             files: fileContents,
             stats: {
                 file_types: this.stats.fileTypes,
                 largest_file: this.stats.largestFile,
-                average_file_size: this.stats.averageFileSize
+                average_file_size: this.stats.averageFileSize,
+                total_token_count: this.stats.totalTokenCount || 0
             }
         };
 

@@ -2,6 +2,16 @@
 
 All notable changes to the "Code Cartographer" extension will be documented in this file.
 
+## [0.5.0] - 2025-04-22
+
+### Added
+- **Documentation Type Selection**: Choose between "Both", "Structure Only", or "Content Only" directly in the manual file selection interface
+- **Output Format Selection**: Select JSON, TXT, or CSV formats in the manual file selection interface
+- **Token Count Calculation**: Added approximate token count calculation for LLM context understanding
+  - Shows total token count in all output formats
+  - Helps users manage LLM context window usage effectively
+- **Smart File Extension Handling**: File extension in output path now automatically updates based on selected format
+
 ## [0.4.1] - 2025-04-01
 
 ### Fixed

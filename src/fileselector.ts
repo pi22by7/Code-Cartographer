@@ -64,7 +64,9 @@ export class FileSelector {
                                 message.selectedItems,
                                 message.outputPath,
                                 message.honorGitignore,
-                                message.honorConfigFile
+                                message.honorConfigFile,
+                                message.outputFormat,
+                                message.documentationType
                             );
                             return;
                         case 'getDirectoryTree':
@@ -203,7 +205,9 @@ export class FileSelector {
         selectedItems: string[],
         outputPath: string,
         honorGitignore: boolean = false,
-        honorConfigFile: boolean = false
+        honorConfigFile: boolean = false,
+        outputFormat: string = 'json',
+        documentationType: string = 'both'
     ): Promise<void> {
         if (!selectedItems || selectedItems.length === 0) {
             vscode.window.showWarningMessage('No files selected for documentation');
@@ -247,9 +251,11 @@ export class FileSelector {
             progress.report({ message: 'Processing selected files...' });
 
             try {
-                // Generate documentation with only selected files
+                // Generate documentation with only selected files and the new options
                 await this.cartographer.document({
                     outputPath,
+                    outputFormat,
+                    documentationType,
                     includeItems: absolutePaths,
                     onProgress: (message: string, percent: number) => {
                         progress.report({ message, increment: percent });
@@ -295,6 +301,23 @@ export class FileSelector {
                     display: flex;
                     gap: 20px;
                     height: calc(100vh - 200px);
+                }
+                .select-container {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                .select-container label {
+                    min-width: 150px;
+                    margin-right: 10px;
+                }
+                .select-input {
+                    flex: 1;
+                    padding: 8px;
+                    background-color: var(--vscode-input-background);
+                    color: var(--vscode-input-foreground);
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 2px;
                 }
                 .file-browser {
                     flex: 2;
@@ -596,6 +619,26 @@ export class FileSelector {
                         <label for="outputPath">Output Path:</label>
                         <input type="text" id="outputPath" value="./documentation.json" placeholder="Path for generated documentation">
                     </div>
+
+                    <div class="footer-settings">
+                        <div class="select-container">
+                            <label for="documentationType">Documentation Type:</label>
+                            <select id="documentationType" class="select-input">
+                                <option value="both">Both (Structure & Content)</option>
+                                <option value="structure">Structure Only</option>
+                                <option value="documentation">Content Only</option>
+                            </select>
+                        </div>
+                        
+                        <div class="select-container">
+                            <label for="outputFormat">Output Format:</label>
+                            <select id="outputFormat" class="select-input">
+                                <option value="json">JSON</option>
+                                <option value="txt">TXT</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                    </div>
                     
                     <div class="footer-settings">
                         <div class="toggle-container">
@@ -635,7 +678,9 @@ export class FileSelector {
                         directoryTree: null,
                         expandedNodes: new Set(),
                         honorGitignore: ${gitignoreExists},
-                        honorConfigFile: ${configExists}
+                        honorConfigFile: ${configExists},
+                        outputFormat: 'json', // Add new state property
+                        documentationType: 'both' // Add new state property
                     };
                     
                     // Elements
@@ -650,6 +695,8 @@ export class FileSelector {
                     const collapseAllBtn = document.getElementById('collapseAllBtn');
                     const honorGitignoreToggle = document.getElementById('honorGitignoreToggle');
                     const honorConfigToggle = document.getElementById('honorConfigToggle');
+                    const documentTypeSelect = document.getElementById('documentationType');
+                    const outputFormatSelect = document.getElementById('outputFormat');
                     
                     // Set initial toggle states
                     if (${gitignoreExists}) {
@@ -682,6 +729,20 @@ export class FileSelector {
                     honorConfigToggle.addEventListener('change', () => {
                         state.honorConfigFile = honorConfigToggle.checked;
                     });
+
+                    documentTypeSelect.addEventListener('change', () => {
+                        state.documentationType = documentTypeSelect.value;
+                    });
+
+                    outputFormatSelect.addEventListener('change', () => {
+                        state.outputFormat = outputFormatSelect.value;
+                        
+                        // Update file extension in output path based on format
+                        const currentPath = outputPathEl.value;
+                        const basePath = currentPath.replace(/\\.[^/.]+$/, ""); // Remove extension
+                        outputPathEl.value = basePath + "." + outputFormatSelect.value;
+                    });
+
                     
                     generateBtn.addEventListener('click', () => {
                         if (state.selectedItems.size === 0) {
@@ -694,10 +755,11 @@ export class FileSelector {
                             selectedItems: Array.from(state.selectedItems),
                             outputPath: outputPathEl.value || './documentation.json',
                             honorGitignore: state.honorGitignore,
-                            honorConfigFile: state.honorConfigFile
+                            honorConfigFile: state.honorConfigFile,
+                            outputFormat: state.outputFormat,
+                            documentationType: state.documentationType
                         });
-                    });
-                    
+                    });                    
                     searchInput.addEventListener('input', () => {
                         filterTree(searchInput.value.toLowerCase());
                     });

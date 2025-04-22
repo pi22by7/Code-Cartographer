@@ -7,3 +7,4 @@ out.json
 out.txt
 documentation.json
 .env
+cartographer.config.json

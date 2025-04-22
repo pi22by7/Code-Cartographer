@@ -54,5 +54,5 @@ jobs:
         if: success() && contains(github.ref, 'refs/tags/')
         run: |
           # You can uncomment and use this once you've set up the secrets
-          # vsce publish -p ${{ secrets.VSCE_PAT }}
-          echo "Skipping VS Marketplace publication. Uncomment the vsce publish line when ready."
+          vsce publish -p ${{ secrets.VSCE_PAT }}
+          # echo "Skipping VS Marketplace publication. Uncomment the vsce publish line when ready."

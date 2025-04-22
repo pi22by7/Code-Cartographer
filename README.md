@@ -12,6 +12,8 @@ Code Cartographer is a powerful VS Code extension that automatically generates c
 - **Quick Project Analysis**: Get a quick overview of your project's structure and file distribution
 - **Enhanced Debugging**: Comprehensive logging to help diagnose issues
 - **Manual Selection Mode**: Selectively choose files and directories to document with a hierarchical UI
+- **Token Counting**: Calculate and display token usage for LLM context windows
+- **Format & Type Selection**: Choose output format and documentation type directly in the UI
 
 ## Why Use Code Cartographer with LLMs
 
@@ -21,6 +23,7 @@ Code Cartographer was designed with LLM workflows in mind:
 - **Better Comprehension**: Help LLMs understand your codebase structure and relationships
 - **Efficient Interaction**: Get more accurate code suggestions by providing complete project context
 - **Focused Documentation**: Include only the files and code that matter using flexible configuration
+- **Token Awareness**: Know exactly how many tokens your documentation will consume in an LLM
 
 ## Getting Started
 
@@ -44,8 +47,10 @@ For precise control over what gets documented:
 
 1. Press `Ctrl+Shift+Alt+G` (or `Cmd+Shift+Alt+G` on Mac)
 2. Use the hierarchical tree view to select specific files and folders
-3. Toggle whether to honor .gitignore and cartographer.config.json settings
-4. Click "Generate Documentation"
+3. Choose your preferred documentation type (Both, Structure Only, Content Only)
+4. Select your desired output format (JSON, TXT, CSV)
+5. Toggle whether to honor .gitignore and cartographer.config.json settings
+6. Click "Generate Documentation"
 
 ### Using a Configuration File
 
